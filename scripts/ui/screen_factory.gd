@@ -41,8 +41,8 @@ static func style_box(background: Color, border: Color, radius: int = 12, border
 	return style
 
 
-static func panel(background: Color = PANEL, border: Color = BORDER, padding: Vector2 = Vector2(20.0, 12.0)) -> PanelContainer:
-	var result := PanelContainer.new()
+static func panel(background: Color = PANEL, border: Color = BORDER, padding: Vector2 = Vector2(20.0, 12.0)) -> Panel:
+	var result := Panel.new()
 	var style := style_box(Color(background, 0.96), border, 20, 1)
 	style.shadow_color = Color(0.0, 0.0, 0.0, 0.38)
 	style.shadow_size = 28

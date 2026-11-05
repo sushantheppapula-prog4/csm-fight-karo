@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="manus-game-loading-screen" content="1">
+  <meta name="theme-color" content="#100c20">
+  
+  
+  
+
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #100c20;
+      --cyan: #43e9ff;
+      --pink: #ff4eb5;
+      --violet: #9c6dff;
+      --paper: #f8f4ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--ink); color: var(--paper); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #canvas { display: block; width: 100%; height: 100%; outline: none; }
+    #loading { position: fixed; inset: 0; z-index: 2; display: grid; place-content: center; gap: 13px; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); overflow: auto; isolation: isolate; text-align: center; background: radial-gradient(ellipse at 18% 14%, #37205dcc 0%, transparent 42%), radial-gradient(ellipse at 83% 86%, #52164ccc 0%, transparent 42%), var(--ink); }
+    #loading[hidden], [hidden] { display: none; }
+    .loader-mark { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .loader-mark img { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 0 15px #8339ff88); }
+    .eyebrow { color: #b7adcb; font-size: 12px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0; font-size: clamp(25px, 6vw, 52px); line-height: 1.02; letter-spacing: -.045em; font-weight: 1000; }
+    h1 .cyan { color: var(--cyan); text-shadow: 0 0 26px #43e9ff66; }
+    h1 .pink { color: var(--pink); text-shadow: 0 0 26px #ff4eb566; }
+    #loading-status { margin: 3px 0 0; color: #d4cadf; font-weight: 650; }
+    #loading-progress { display: block; width: min(380px, 78vw); height: 8px; justify-self: center; border: 0; border-radius: 99px; overflow: hidden; accent-color: var(--cyan); background: #ffffff20; }
+    #loading-progress::-webkit-progress-bar { border-radius: 99px; background: #ffffff20; }
+    #loading-progress::-webkit-progress-value { border-radius: 99px; background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink)); box-shadow: 0 0 18px #43e9ff80; }
+    #loading-progress::-moz-progress-bar { border-radius: 99px; background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink)); }
+    #loading-notice { max-width: min(400px, 84vw); margin: 0 auto; color: #d4cadf; line-height: 1.5; }
+    #loading-retry { min-height: 46px; justify-self: center; padding: 0 24px; border: 1px solid #43e9ff88; border-radius: 13px; background: #43e9ff14; color: var(--paper); font: inherit; font-weight: 800; cursor: pointer; }
+    #loading-retry:hover { background: #43e9ff27; }
+    #loading-retry:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
+    .loader-foot { color: #948aa8; font-size: 12px; }
+    @media (max-height: 460px) and (min-aspect-ratio: 1/1) { #loading { grid-auto-flow: column; grid-template-columns: auto auto; gap: 8px 24px; text-align: left; } .loader-mark { grid-row: span 3; } #loading-progress, #loading-retry { justify-self: start; } .loader-mark img { width: 44px; height: 44px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+  </style>
+<!-- manus:game-sharing:start -->
+<title>CSM Fight Karo Lite</title>
+<link rel="icon" type="image/png" href="./share/870d2e3d95e54a02965315c90c771b35964ee150d0292c2c66b4e7eefe2c6c85.png">
+<link rel="apple-touch-icon" href="./share/870d2e3d95e54a02965315c90c771b35964ee150d0292c2c66b4e7eefe2c6c85.png">
+<meta name="description" content="Pick a fighter from your CSM Gang or the Opposite Gang and battle locally in a quick, Telugu-banter arcade match. No account or backend; match data and custom face photos stay in memory for the active session.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CSM Fight Karo Lite">
+<meta property="og:description" content="Pick a fighter from your CSM Gang or the Opposite Gang and battle locally in a quick, Telugu-banter arcade match. No account or backend; match data and custom face photos stay in memory for the active session.">
+<meta property="og:url" content="https://csmfight-i4d3yscn.manus.game/">
+<meta property="og:image" content="https://csmfight-i4d3yscn.manus.game/share/e3bd94706ef7f142783ca1d98fc2c054ab2f4c3852291157c4b1c00e6cbbf58b.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="CSM Fight Karo Lite">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CSM Fight Karo Lite">
+<meta name="twitter:description" content="Pick a fighter from your CSM Gang or the Opposite Gang and battle locally in a quick, Telugu-banter arcade match. No account or backend; match data and custom face photos stay in memory for the active session.">
+<meta name="twitter:image" content="https://csmfight-i4d3yscn.manus.game/share/e3bd94706ef7f142783ca1d98fc2c054ab2f4c3852291157c4b1c00e6cbbf58b.png">
+<meta name="twitter:image:alt" content="CSM Fight Karo Lite">
+<!-- manus:game-sharing:end -->
+</head>
+<body>
+  <canvas id="canvas" tabindex="0" aria-label="CSM Fight Karo Lite game">Your browser does not support canvas.</canvas>
+  <section id="loading" role="status" aria-live="polite">
+    <div class="loader-mark">
+      <img src="data:image/png;base64,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" width="56" height="56" alt="">
+      <span class="eyebrow">LOCAL ARCADE • SESSION ONLY</span>
+    </div>
+    <h1 id="game-title"><span class="cyan">CSM FIGHT</span><br><span class="pink">KARO LITE</span></h1>
+    <p id="loading-status">Loading the arena…</p>
+    <progress id="loading-progress" aria-label="Game download progress"></progress>
+    <p id="loading-notice" hidden></p>
+    <button id="loading-retry" type="button" hidden>Retry</button>
+    <span class="loader-foot">Friends by day. Enemies in the arena.</span>
+    <noscript>JavaScript is required to play this game.</noscript>
+  </section>
+  <script>(function(){var R={"index.wasm":"/manus-storage/game/sha256/fc74679e3b97f76878947fcd4fbe1268cbfa6188182a2e33bbc3f5dc9bfa57d0.wasm","index.pck":"/manus-storage/game/sha256/3be9bf8dcfcfc7ed061f3543a95bb5282c20e41a53f81450b7daf551d0a6aabc.pck"};var f=window.fetch.bind(window);window.fetch=function(i,o){var u=typeof i==="string"?i:(i&&i.url)||"";var b=u.split("?")[0].split("/").pop();return R[b]?f(R[b],o):f(i,o)};})();</script>
+<script>
+    (() => {
+      const config = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":8628756,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+      const threads = false;
+      const canvas = document.getElementById('canvas');
+      const loading = document.getElementById('loading');
+      const status = document.getElementById('loading-status');
+      const progress = document.getElementById('loading-progress');
+      const notice = document.getElementById('loading-notice');
+      const retry = document.getElementById('loading-retry');
+      retry.addEventListener('click', () => window.location.reload());
+      let failed = false;
+      let ready = false;
+      const startedAt = performance.now();
+      let lastProgressAt = startedAt;
+      let downloadedBytes = 0;
+      let downloadComplete = false;
+      const updateNotice = () => {
+        if (failed || ready || performance.now() - startedAt < 30000) return;
+        notice.hidden = false;
+        retry.hidden = false;
+        notice.textContent = performance.now() - lastProgressAt >= 30000
+          ? 'No recent loading progress. You can keep waiting or retry.'
+          : 'Still loading. You can keep waiting or retry.';
+      };
+      const onWindowError = (event) => fail(event.error || new Error('Engine startup error'));
+      const onUnhandledRejection = (event) => fail(event.reason || new Error('Engine startup rejected'));
+      const startupWatch = setInterval(updateNotice, 1000);
+      const stopObserving = () => {
+        clearInterval(startupWatch);
+        window.removeEventListener('error', onWindowError);
+        window.removeEventListener('unhandledrejection', onUnhandledRejection);
+      };
+      const fail = (error) => {
+        if (failed || ready) return;
+        failed = true;
+        stopObserving();
+        console.error('[game-loading] Startup failed', error);
+        loading.hidden = false;
+        status.textContent = 'Unable to load the game. Please retry.';
+        progress.hidden = true;
+        notice.hidden = true;
+        retry.hidden = false;
+      };
+      window.addEventListener('error', onWindowError);
+      window.addEventListener('unhandledrejection', onUnhandledRejection);
+      const onProgress = (current, total) => {
+        if (failed || ready) return;
+        if (Number.isFinite(current) && current > downloadedBytes) {
+          downloadedBytes = current;
+          lastProgressAt = performance.now();
+        }
+        if (!downloadComplete && Number.isFinite(total) && total > 0 && Number.isFinite(current) && current >= total) {
+          downloadComplete = true;
+          lastProgressAt = performance.now();
+        }
+        updateNotice();
+        if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(current) || current < 0) {
+          progress.removeAttribute('value');
+          status.textContent = 'Loading the arena…';
+          return;
+        }
+        progress.max = total;
+        progress.value = Math.min(current, total);
+        status.textContent = current >= total ? 'Starting the game…' : `${Math.floor(current / total * 100)}%`;
+      };
+      const start = async () => {
+        if (failed) return;
+        try {
+          lastProgressAt = performance.now();
+          const missing = Engine.getMissingFeatures({ threads });
+          if (missing.length) throw new Error(`Missing browser features: ${missing.join(', ')}`);
+          const engine = new Engine({ ...config, canvas });
+          await engine.startGame({ onProgress });
+          if (failed) return;
+          ready = true;
+          stopObserving();
+          notice.hidden = true;
+          retry.hidden = true;
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (!failed) loading.hidden = true;
+          }));
+        } catch (error) {
+          fail(error);
+        }
+      };
+      const script = document.createElement('script');
+      script.src = 'index.js';
+      script.addEventListener('load', start, { once: true });
+      script.addEventListener('error', () => fail(new Error('Engine script could not be loaded')), { once: true });
+      document.head.appendChild(script);
+    })();
+  </script>
+</body>
+</html>
+

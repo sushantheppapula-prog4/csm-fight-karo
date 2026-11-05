@@ -1,6 +1,22 @@
 {
   "version": 2,
   "groups": {
+    "fight-audio": {
+      "name": "Fight Audio",
+      "order": 20
+    },
+    "fighters": {
+      "name": "Fighters",
+      "order": 5
+    },
+    "game-world": {
+      "name": "Arena & Menu Art",
+      "order": 10
+    },
+    "share": {
+      "name": "Share",
+      "order": 30
+    },
     "template": {
       "name": "Template",
       "order": 0
@@ -8,6 +24,336 @@
   },
   "bundles": {},
   "assets": {
+    "assets/game/arena_background.jpg": {
+      "path": "/manus-storage/game/sha256/2afa7b767668e20e7e9157bc9a7b0e45c9d519eeafe51a02759bd2e406a8f422.jpg",
+      "sha256": "sha256:2afa7b767668e20e7e9157bc9a7b0e45c9d519eeafe51a02759bd2e406a8f422",
+      "size": 308185,
+      "assetType": "image",
+      "groupId": "game-world",
+      "used": true
+    },
+    "assets/game/arena_background.png": {
+      "path": "/manus-storage/game/sha256/5ac2c72bd90f5efa8729a079d8ad02266177677a695037e82ee8b5aa077c8d80.png",
+      "sha256": "sha256:5ac2c72bd90f5efa8729a079d8ad02266177677a695037e82ee8b5aa077c8d80",
+      "size": 4151550,
+      "assetType": "image",
+      "groupId": "game-world",
+      "used": false,
+      "alternateOf": "assets/game/arena_background.jpg"
+    },
+    "assets/game/audio/arcade_theme.mp3": {
+      "path": "/manus-storage/game/sha256/7d23c1359546b64203f3efb80ef8e314ea0fab9d4306119f0040ab185633c4cb.mp3",
+      "sha256": "sha256:7d23c1359546b64203f3efb80ef8e314ea0fab9d4306119f0040ab185633c4cb",
+      "size": 1830517,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": false
+    },
+    "assets/game/audio/arcade_theme.ogg": {
+      "path": "/manus-storage/game/sha256/100b2ccc88aacf69f88895c64cb9c503e4dbda06f5c631d06ece6031fb7a6559.ogg",
+      "sha256": "sha256:100b2ccc88aacf69f88895c64cb9c503e4dbda06f5c631d06ece6031fb7a6559",
+      "size": 532963,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/defeat.mp3": {
+      "path": "/manus-storage/game/sha256/257340fe8fb639459d54cf15dc3edc22db6c5a40f7788c1f799d172d265c3fa1.mp3",
+      "sha256": "sha256:257340fe8fb639459d54cf15dc3edc22db6c5a40f7788c1f799d172d265c3fa1",
+      "size": 15089,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/jump.mp3": {
+      "path": "/manus-storage/game/sha256/81151cd0601e8586f849dc6ea5047ae5e93d5d5864479de095e543ee6f46d9a7.mp3",
+      "sha256": "sha256:81151cd0601e8586f849dc6ea5047ae5e93d5d5864479de095e543ee6f46d9a7",
+      "size": 8820,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/kick.mp3": {
+      "path": "/manus-storage/game/sha256/509c5e8f517187d890bc426f17e6b6bd1b412655e35ee8426b65f8e25c117c1d.mp3",
+      "sha256": "sha256:509c5e8f517187d890bc426f17e6b6bd1b412655e35ee8426b65f8e25c117c1d",
+      "size": 8820,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/punch.mp3": {
+      "path": "/manus-storage/game/sha256/56b8b1fb044e2464d8598c9fe909a0f619c113625ba8cccc9d466e1130708902.mp3",
+      "sha256": "sha256:56b8b1fb044e2464d8598c9fe909a0f619c113625ba8cccc9d466e1130708902",
+      "size": 8820,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_01.ogg": {
+      "path": "/manus-storage/game/sha256/cc035dcbba21c19ba0856673552fadd5357c645d8c0726818b72fe0332743e50.ogg",
+      "sha256": "sha256:cc035dcbba21c19ba0856673552fadd5357c645d8c0726818b72fe0332743e50",
+      "size": 6986,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_02.ogg": {
+      "path": "/manus-storage/game/sha256/098d1b3d8a4910120d53536a6df030a2821acdf7abe6b992a66a8c1ff3244b83.ogg",
+      "sha256": "sha256:098d1b3d8a4910120d53536a6df030a2821acdf7abe6b992a66a8c1ff3244b83",
+      "size": 12847,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_03.ogg": {
+      "path": "/manus-storage/game/sha256/46e7edd88da986d924a5549554dd2954f97fe27b76d7b75bce9a76303610f60b.ogg",
+      "sha256": "sha256:46e7edd88da986d924a5549554dd2954f97fe27b76d7b75bce9a76303610f60b",
+      "size": 15282,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_04.ogg": {
+      "path": "/manus-storage/game/sha256/562499d34e4fdcdb6745cd1fe9cdd2723bc245bf1879af132032ab5c40fa8423.ogg",
+      "sha256": "sha256:562499d34e4fdcdb6745cd1fe9cdd2723bc245bf1879af132032ab5c40fa8423",
+      "size": 10043,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_05.ogg": {
+      "path": "/manus-storage/game/sha256/ef3180da0f737a5fb6c18eb93f9024a41c34ad671ba8b63d4d2c6c02e5a1f4e9.ogg",
+      "sha256": "sha256:ef3180da0f737a5fb6c18eb93f9024a41c34ad671ba8b63d4d2c6c02e5a1f4e9",
+      "size": 15767,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_06.ogg": {
+      "path": "/manus-storage/game/sha256/40c09eed99eb0eea2ec41e1eb11e4d85dab0ee39b8425e165eee47ef1e0d33dc.ogg",
+      "sha256": "sha256:40c09eed99eb0eea2ec41e1eb11e4d85dab0ee39b8425e165eee47ef1e0d33dc",
+      "size": 11272,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_07.ogg": {
+      "path": "/manus-storage/game/sha256/cc3074479fab1217c1977f7fd66fd905f00a4135707aa6184bf8092c5ded368e.ogg",
+      "sha256": "sha256:cc3074479fab1217c1977f7fd66fd905f00a4135707aa6184bf8092c5ded368e",
+      "size": 12302,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/quips/quip_08.ogg": {
+      "path": "/manus-storage/game/sha256/60155762827121dae69e4d3d7c92a1615935b5c9bc44557c82e6dcf65f8e4105.ogg",
+      "sha256": "sha256:60155762827121dae69e4d3d7c92a1615935b5c9bc44557c82e6dcf65f8e4105",
+      "size": 13550,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/special.mp3": {
+      "path": "/manus-storage/game/sha256/d124d70f669c2a1bf4bd408db9c08d48f9eb9c6966f637e6ec51206f722d4065.mp3",
+      "sha256": "sha256:d124d70f669c2a1bf4bd408db9c08d48f9eb9c6966f637e6ec51206f722d4065",
+      "size": 14671,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/audio/telugu_quips.ogg": {
+      "path": "/manus-storage/game/sha256/dec746eff6743516f6e3cfd3a348b6687b02f4c190a9b15c5e117ec348eb6f30.ogg",
+      "sha256": "sha256:dec746eff6743516f6e3cfd3a348b6687b02f4c190a9b15c5e117ec348eb6f30",
+      "size": 96798,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": false
+    },
+    "assets/game/audio/telugu_quips.wav": {
+      "path": "/manus-storage/game/sha256/5707000aab324c32ec5d261fb1b3f47465572db56914ea1215442e9d92f70489.wav",
+      "sha256": "sha256:5707000aab324c32ec5d261fb1b3f47465572db56914ea1215442e9d92f70489",
+      "size": 771868,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": false
+    },
+    "assets/game/audio/victory.mp3": {
+      "path": "/manus-storage/game/sha256/8101a834f5f81f611d5086e410c5f57bbaa1fe51abd24a46c049def6a4e2a859.mp3",
+      "sha256": "sha256:8101a834f5f81f611d5086e410c5f57bbaa1fe51abd24a46c049def6a4e2a859",
+      "size": 18433,
+      "assetType": "audio",
+      "groupId": "fight-audio",
+      "used": true
+    },
+    "assets/game/characters/arabian_horse.png": {
+      "path": "/manus-storage/game/sha256/60aa04003ec0c025f434447a455622ee6cd2f25f7b293554abcd0b428413f975.png",
+      "sha256": "sha256:60aa04003ec0c025f434447a455622ee6cd2f25f7b293554abcd0b428413f975",
+      "size": 209273,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_01.png": {
+      "path": "/manus-storage/game/sha256/4a7beacdf854f2a60ae0acea1f456a4c342f04bf15c991e7dcbf7008f2459881.png",
+      "sha256": "sha256:4a7beacdf854f2a60ae0acea1f456a4c342f04bf15c991e7dcbf7008f2459881",
+      "size": 120975,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_02.png": {
+      "path": "/manus-storage/game/sha256/74210ba1d81e30e9bb8a409b1758a5af366c50020ac113c28f745f3e383ddcf1.png",
+      "sha256": "sha256:74210ba1d81e30e9bb8a409b1758a5af366c50020ac113c28f745f3e383ddcf1",
+      "size": 144818,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_03.png": {
+      "path": "/manus-storage/game/sha256/8d4efa4f4d28308a0d52820aa7b917bb7498086bece2f4e2e55aa3b2c9ca9378.png",
+      "sha256": "sha256:8d4efa4f4d28308a0d52820aa7b917bb7498086bece2f4e2e55aa3b2c9ca9378",
+      "size": 144521,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_04.png": {
+      "path": "/manus-storage/game/sha256/9c48863cc22e4ca040a81f96bf72d7104ca8e328b98633420416220cb2715785.png",
+      "sha256": "sha256:9c48863cc22e4ca040a81f96bf72d7104ca8e328b98633420416220cb2715785",
+      "size": 133235,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_05.png": {
+      "path": "/manus-storage/game/sha256/9d57096811f6c1e745f865d5d6b8c39709433d1a4fd9ef558bfeaf4b5df67e1c.png",
+      "sha256": "sha256:9d57096811f6c1e745f865d5d6b8c39709433d1a4fd9ef558bfeaf4b5df67e1c",
+      "size": 142710,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_06.png": {
+      "path": "/manus-storage/game/sha256/b74eeeb3ab391cd02870ee434790dab5d31e8976a9fb8f5c4f43a38a9ca0c121.png",
+      "sha256": "sha256:b74eeeb3ab391cd02870ee434790dab5d31e8976a9fb8f5c4f43a38a9ca0c121",
+      "size": 132672,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_07.png": {
+      "path": "/manus-storage/game/sha256/712515e9ff9c11de982f2759e45c4ecc4a6febfc0d5d1ca215ff36a9de95055e.png",
+      "sha256": "sha256:712515e9ff9c11de982f2759e45c4ecc4a6febfc0d5d1ca215ff36a9de95055e",
+      "size": 102967,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_08.png": {
+      "path": "/manus-storage/game/sha256/0c3f3351be2d191ffcabfabaadb54f7dff8bc5b488bbf9e7740289455e590a80.png",
+      "sha256": "sha256:0c3f3351be2d191ffcabfabaadb54f7dff8bc5b488bbf9e7740289455e590a80",
+      "size": 149086,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": false
+    },
+    "assets/game/characters/fighter_09.png": {
+      "path": "/manus-storage/game/sha256/c93e4a10d6a679ad9812166752ed600fe42434f4dd5c83086e8c453511617924.png",
+      "sha256": "sha256:c93e4a10d6a679ad9812166752ed600fe42434f4dd5c83086e8c453511617924",
+      "size": 195293,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_10.png": {
+      "path": "/manus-storage/game/sha256/01a249889111f2b7012da982e1739b89ae61310fed80c98615841d3c57b4f2f7.png",
+      "sha256": "sha256:01a249889111f2b7012da982e1739b89ae61310fed80c98615841d3c57b4f2f7",
+      "size": 151319,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_11.png": {
+      "path": "/manus-storage/game/sha256/2d98a2df3bf1e44d95821770ae4a50603d3d2e5669fcfc749a5e76810f8f0c59.png",
+      "sha256": "sha256:2d98a2df3bf1e44d95821770ae4a50603d3d2e5669fcfc749a5e76810f8f0c59",
+      "size": 152919,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_12.png": {
+      "path": "/manus-storage/game/sha256/5e6adaf275f71143332fa1fdc70c6070e4c41db035e90cde81053aba17de72ae.png",
+      "sha256": "sha256:5e6adaf275f71143332fa1fdc70c6070e4c41db035e90cde81053aba17de72ae",
+      "size": 154830,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": true
+    },
+    "assets/game/characters/fighter_roster_atlas.png": {
+      "path": "/manus-storage/game/sha256/e473eb3473a2f6450f26270971703f70a54cc42d8bad6c31a424e3c8c74ab7fb.png",
+      "sha256": "sha256:e473eb3473a2f6450f26270971703f70a54cc42d8bad6c31a424e3c8c74ab7fb",
+      "size": 4709797,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": false
+    },
+    "assets/game/characters/masters/arabian_horse_master.png": {
+      "path": "/manus-storage/game/sha256/51cf1b2014ea23f08d32cf21db93581166e2449303bbf319dc71e5c8dd815ab7.png",
+      "sha256": "sha256:51cf1b2014ea23f08d32cf21db93581166e2449303bbf319dc71e5c8dd815ab7",
+      "size": 2969800,
+      "assetType": "image",
+      "groupId": "fighters",
+      "used": false
+    },
+    "assets/game/title_illustration.jpg": {
+      "path": "/manus-storage/game/sha256/aa04658739538340c6473e7b5ebc0e2945e5c5bcb47bc44024c6fed4acfa7cc4.jpg",
+      "sha256": "sha256:aa04658739538340c6473e7b5ebc0e2945e5c5bcb47bc44024c6fed4acfa7cc4",
+      "size": 390400,
+      "assetType": "image",
+      "groupId": "game-world",
+      "used": true
+    },
+    "assets/game/title_illustration.png": {
+      "path": "/manus-storage/game/sha256/c22bcdd8aa3f8ace2e5f56018f092be3add2c4995be34a4ddc6be4fee7f1af5f.png",
+      "sha256": "sha256:c22bcdd8aa3f8ace2e5f56018f092be3add2c4995be34a4ddc6be4fee7f1af5f",
+      "size": 5263811,
+      "assetType": "image",
+      "groupId": "game-world",
+      "used": false,
+      "alternateOf": "assets/game/title_illustration.jpg"
+    },
+    "assets/share/favicon-small.png": {
+      "path": "/manus-storage/game/sha256/870d2e3d95e54a02965315c90c771b35964ee150d0292c2c66b4e7eefe2c6c85.png",
+      "sha256": "sha256:870d2e3d95e54a02965315c90c771b35964ee150d0292c2c66b4e7eefe2c6c85",
+      "size": 6776,
+      "assetType": "image",
+      "groupId": "share",
+      "used": true
+    },
+    "assets/share/favicon.png": {
+      "path": "/manus-storage/game/sha256/db72bb8e7c2f28393995fe896460be22f367814c3765ae33d8bbf175ec84368f.png",
+      "sha256": "sha256:db72bb8e7c2f28393995fe896460be22f367814c3765ae33d8bbf175ec84368f",
+      "size": 2408843,
+      "assetType": "image",
+      "groupId": "share",
+      "used": false
+    },
+    "assets/share/og-cover.png": {
+      "path": "/manus-storage/game/sha256/e3bd94706ef7f142783ca1d98fc2c054ab2f4c3852291157c4b1c00e6cbbf58b.png",
+      "sha256": "sha256:e3bd94706ef7f142783ca1d98fc2c054ab2f4c3852291157c4b1c00e6cbbf58b",
+      "size": 1323144,
+      "assetType": "image",
+      "groupId": "share",
+      "used": true
+    },
+    "assets/share/og.png": {
+      "path": "/manus-storage/game/sha256/de42024f4ba567913c2e4b0d39692c5a4752a0fab484194457ed04b096feeeaf.png",
+      "sha256": "sha256:de42024f4ba567913c2e4b0d39692c5a4752a0fab484194457ed04b096feeeaf",
+      "size": 4880319,
+      "assetType": "image",
+      "groupId": "share",
+      "used": false
+    },
     "assets/template/characters/runner.png": {
       "path": "https://d1oupeiobkpcny.cloudfront.net/assets/dashboard/materials/2026/09/06/game-template/game-generic/2026.09.07-minimalist-v1/c88485773d6ff9361e036f37d8ac76fb77b8c3f7c041c3f52c8dd222adc8cc21/assets/characters/runner.png",
       "sha256": "sha256:c88485773d6ff9361e036f37d8ac76fb77b8c3f7c041c3f52c8dd222adc8cc21",
@@ -110,7 +456,7 @@
       "size": 473356,
       "assetType": "image",
       "groupId": "template",
-      "used": true
+      "used": false
     },
     "assets/template/ui/pause_glass.png": {
       "path": "https://d1oupeiobkpcny.cloudfront.net/assets/dashboard/materials/2026/09/06/game-template/game-generic/2026.09.07-minimalist-v1/c88a4725838df85e72c7270865848f275b62c525c5679a2a8b7ecefb1af82d4b/assets/ui/pause_glass.png",

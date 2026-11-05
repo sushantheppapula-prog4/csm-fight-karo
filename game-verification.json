@@ -2,9 +2,9 @@
   "version": 1,
   "checks": [
     {
-      "kind": "scene",
-      "path": "res://test/test_suite.tscn",
-      "expect": "[game-generic-tests] PASS:",
+      "kind": "script",
+      "path": "res://tools/verify_csm_fight.gd",
+      "expect": "[csm-fight-check] PASS:",
       "profile": "source"
     },
     {

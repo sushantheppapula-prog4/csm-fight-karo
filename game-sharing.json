@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "title": "CSM Fight Karo Lite",
+  "description": "Pick a fighter from your CSM Gang or the Opposite Gang and battle locally in a quick, Telugu-banter arcade match. No account or backend; match data and custom face photos stay in memory for the active session.",
+  "defaultCaptions": {
+    "x": "CSM Fight Karo Lite: friends by day, enemies in the arena. Pick your side and settle the campus rivalry in a local arcade brawl.",
+    "facebook": "Play CSM Fight Karo Lite, a local college-friends arcade fighter with Telugu banter and session-only face-card customization.",
+    "reddit": "CSM Fight Karo Lite is a lightweight browser-based, local-only campus brawler. No account or backend; custom photos stay in this session.",
+    "discord": "CSM Fight Karo Lite — friends by day, enemies in the arena. Choose a team and go head-to-head locally."
+  },
+  "assets": {
+    "og": "assets/share/og-cover.png",
+    "favicon": "assets/share/favicon-small.png"
+  }
+}

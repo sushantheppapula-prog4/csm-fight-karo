@@ -1,6 +1,6 @@
 {
-  "name": "game-generic",
-  "version": "2.0.0",
+  "name": "csm-fight-karo-lite",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "verify": "./tools/verify.sh",

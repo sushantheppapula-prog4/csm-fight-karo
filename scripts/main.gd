@@ -1,1591 +1,1523 @@
 extends Control
-const OpenSourceLicenses = preload("res://scripts/manus/open_source_licenses.gd")
 
-const MazeWorldType := preload("res://scripts/game/maze_world.gd")
-const TutorialType := preload("res://scripts/ui/tutorial_callout.gd")
-const RunScoreServiceType := preload("res://scripts/score/run_score_service.gd")
-const BACKDROP := preload("res://assets/template/environment/backdrop.png")
-const FOREGROUND := preload("res://assets/template/environment/foreground.png")
-const RUNNER_ART := preload("res://assets/template/characters/runner.png")
-const TITLE_FRAME := preload("res://assets/template/ui/title_glass.png")
-const PAUSE_FRAME := preload("res://assets/template/ui/pause_glass.png")
-const FILTER_SHADER := preload("res://shaders/arcade_filter.gdshader")
-const LOGO_SHADER := preload("res://shaders/logo_chrome.gdshader")
-const ENERGY_ICON := preload("res://assets/template/powerups/energy.png")
-const MenuListType := preload("res://scripts/ui/menu_list.gd")
-const TitleArtType := preload("res://scripts/ui/title_art.gd")
-const ArenaFrameType := preload("res://scripts/ui/arena_frame.gd")
-const TITLE_DESIGN_SIZE := Vector2(600.0, 540.0)
-const TITLE_PORTRAIT_SIZE := Vector2(600.0, 1060.0)
+const ScreenFactory = preload("res://scripts/ui/screen_factory.gd")
+const FighterRosterType = preload("res://scripts/game/fighter_roster.gd")
+const FightRulesType = preload("res://scripts/game/fight_rules.gd")
+const FighterActorType = preload("res://scripts/entities/fighter_actor.gd")
+const ARENA_ART = preload("res://assets/game/arena_background.jpg")
+const TITLE_ART = preload("res://assets/game/title_illustration.jpg")
+const MUSIC_PATH = "res://assets/game/audio/arcade_theme.ogg"
+const VOICE_PATHS := {
+	"Orey, internal exam anukunnava?": "res://assets/game/audio/quips/quip_01.ogg",
+	"Naa range veru ra!": "res://assets/game/audio/quips/quip_02.ogg",
+	"First attendance veyyi ra!": "res://assets/game/audio/quips/quip_03.ogg",
+	"Dheenamma, mass entry!": "res://assets/game/audio/quips/quip_04.ogg",
+	"Side ivvu ra babu!": "res://assets/game/audio/quips/quip_05.ogg",
+	"Pass avvadam kuda oka art ra!": "res://assets/game/audio/quips/quip_06.ogg",
+	"Ayyayyo, debba padindhi!": "res://assets/game/audio/quips/quip_07.ogg",
+	"Friendship cancelled ra!": "res://assets/game/audio/quips/quip_08.ogg"
+}
+const MAX_UPLOAD_BYTES := 6 * 1024 * 1024
 
-var _backdrop: TextureRect
-var _foreground: TextureRect
-var _filter: ColorRect
-var _filter_material: ShaderMaterial
-var _world_root: Node2D
-var _world: MazeWorld
-var _feedback_flash: ColorRect
+class ArenaEffects extends Node2D:
+	var owner_game: Node
 
-var _title_screen: Control
-var _licenses_button: Button
-var _title_panel: PanelContainer
-var _title_frame: TextureRect
-var _title_label: Label
-var _subtitle_label: Label
-var _tagline_label: Label
-var _play_button: Button
-var _leaderboard_button: Button
-var _language_button: Button
-var _tutorial_button: Button
-var _title_status: Label
+	func _process(_delta: float) -> void:
+		queue_redraw()
 
-var _hud: Control
-var _hud_panel: PanelContainer
-var _score_label: Label
-var _score_caption: Label
-var _stage_caption: Label
-var _lives_caption: Label
-var _stage_label: Label
-var _lives_label: Label
-var _power_label: Label
-var _pause_button: Button
-var _stage_banner: Label
+	func _draw() -> void:
+		if owner_game == null or str(owner_game.get("_screen")) != "arena":
+			return
+		var size := get_viewport_rect().size
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var floor_y := size.y * (0.56 if size.y > size.x * 1.15 else 0.73)
+		var cyan := Color("43e9ff")
+		var pink := Color("ff4eb5")
+		draw_line(Vector2(0, floor_y), Vector2(size.x, floor_y), Color(cyan, 0.52), 2.0, true)
+		draw_line(Vector2(0, floor_y + 4.0), Vector2(size.x, floor_y + 4.0), Color(pink, 0.24), 1.0, true)
+		for index: int in 9:
+			var x := size.x * (float(index) / 8.0)
+			draw_line(Vector2(size.x * 0.5, floor_y), Vector2(x, size.y), Color(cyan, 0.045), 1.0, true)
+		for particle: Dictionary in owner_game.get("_fx_particles"):
+			var life_ratio := clampf(float(particle.life) / float(particle.max_life), 0.0, 1.0)
+			var tint: Color = particle.tint
+			tint.a *= life_ratio
+			draw_circle(particle.position, float(particle.radius) * life_ratio, tint)
 
-var _pause_screen: Control
-var _pause_panel: PanelContainer
-var _pause_frame: TextureRect
-var _pause_title: Label
-var _resume_button: Button
-var _restart_button: Button
-var _pause_title_button: Button
-var _confirm_screen: Control
-var _confirm_panel: PanelContainer
-var _confirm_title: Label
-var _confirm_message: Label
-var _confirm_accept_button: Button
-var _confirm_cancel_button: Button
-var _pending_destructive_action := ""
 
-var _result_screen: Control
-var _result_panel: PanelContainer
-var _result_title: Label
-var _result_score: Label
-var _result_score_caption: Label
-var _result_time: Label
-var _result_name_label: Label
-var _name_input: LineEdit
-var _submit_button: Button
-var _result_status: Label
-var _play_again_button: Button
-var _result_title_button: Button
+var _screen := "menu"
+var _background: TextureRect
+var _wash: ColorRect
+var _actor_layer: Node2D
+var _fx_layer: ArenaEffects
+var _page: Control
+var _voice_player: AudioStreamPlayer
+var _voice_timer: Timer
 
-var _leaderboard_screen: Control
-var _leaderboard_panel: PanelContainer
-var _leaderboard_title: Label
-var _leaderboard_rows: VBoxContainer
-var _leaderboard_back_button: Button
+var _roster: Array[Dictionary] = []
+var _selected_p1 := "cr"
+var _selected_p2 := "swapna_taker"
+var _mode := "cpu"
+var _difficulty := "Normal"
+var _sound_enabled := true
+var _music_enabled := true
+var _voice_enabled := true
+var _music_started := false
+var _session_results: Array[Dictionary] = []
+var _custom_faces: Dictionary = {}
+var _custom_voice: Dictionary = {}
+var _custom_dialogue: Dictionary = {}
+var _custom_id := "cr"
+var _draft_image: Image
+var _draft_crop := Vector2.ZERO
+var _upload_kind := "photo"
+var _file_dialog: FileDialog
+var _photo_preview: TextureRect
+var _photo_name_label: Label
+var _crop_x_slider: HSlider
+var _crop_y_slider: HSlider
+var _dialogue_input: LineEdit
 
-var _tutorial: TutorialCallout
-var _touch_controls: Control
-var _skip_tutorial_button: Button
-var _screen := "title"
-var _stage_index := 0
-var _run_score := 0
-var _run_lives := 3
-var _run_elapsed := 0.0
-var _run_completed := false
-var _score_saved := false
-var _stage_start_score := 0
-var _stage_start_lives := 3
-var _tutorial_state := -1
-var _force_tutorial := false
-var _input_method := "keyboard"
-var _tutorial_run := false
-var _score_service: RunScoreService
-var _run_result: Dictionary = {}
-# Round-3 presentation layer (menus, key art, HUD widgets, transitions).
-var _title_art: Control
-var _title_menu: VBoxContainer
-var _title_eyebrow_row: HBoxContainer
-var _title_footer: HBoxContainer
-var _title_hints: HBoxContainer
-var _pause_menu: VBoxContainer
-var _arena_frame: Control
-var _transition: ColorRect
-var _hud_chips: Array[PanelContainer] = []
-var _stage_pips: Control
-var _result_pips: Control
-var _result_reveal := 1.0
-var _shown_score := -1
-var _shown_lives := -1
+var _actor_one: FighterActor
+var _actor_two: FighterActor
+var _hud_health_one: ProgressBar
+var _hud_health_two: ProgressBar
+var _hud_energy_one: ProgressBar
+var _hud_energy_two: ProgressBar
+var _hud_timer: Label
+var _hud_round: Label
+var _hud_dialogue: Label
+var _hud_pause_button: Button
+var _vs_overlay: Control
+var _touch_pad: Control
+var _touch_pressed: Dictionary = {}
+var _key_latches: Dictionary = {}
+var _round_wins: Array[int] = [0, 0]
+var _round_number := 1
+var _round_timer := 60.0
+var _countdown := 0.0
+var _between_round_timer := 0.0
+var _phase := "idle"
+var _match_winner := -1
+var _low_health_seen := [false, false]
+var _jump_heights := [0.0, 0.0]
+var _jump_speeds := [0.0, 0.0]
+var _attack_cooldowns := [0.0, 0.0]
+var _knockback_speeds := [0.0, 0.0]
+var _cpu_decision_timer := 0.0
+var _cpu_block_timer := 0.0
+var _ground_y := 0.0
+var _fx_particles: Array[Dictionary] = []
+var _last_dialogue := ""
+var _dialogue_time := 0.0
+var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
-	_ensure_gamepad_bindings()
+	_rng.randomize()
+	_roster = FighterRosterType.all_characters()
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_layers()
-	_build_title_screen()
-	_build_hud()
-	_build_pause_screen()
-	_build_confirmation_screen()
-	_build_result_screen()
-	_build_leaderboard_screen()
-	_tutorial = TutorialType.new()
-	add_child(_tutorial)
-	_tutorial.continued.connect(_on_tutorial_continued)
-	_build_touch_controls()
-	_build_skip_tutorial_button()
-	_pause_screen.visibility_changed.connect(_sync_world_actor_visibility)
-	_confirm_screen.visibility_changed.connect(_sync_world_actor_visibility)
-	_result_screen.visibility_changed.connect(_sync_world_actor_visibility)
-	_leaderboard_screen.visibility_changed.connect(_sync_world_actor_visibility)
-	_stage_banner.visibility_changed.connect(_sync_world_actor_visibility)
-	_tutorial.visibility_changed.connect(_sync_world_actor_visibility)
-	I18n.locale_changed.connect(_on_locale_changed)
-	TuningStore.value_changed.connect(_on_tuning_value_changed)
-	resized.connect(_layout_world)
-	_apply_responsive_layout()
-	_apply_filter_settings()
-	_refresh_texts()
-	call_deferred("_apply_responsive_layout")
-	_show_title()
-	AudioDirector.register_button(_confirm_cancel_button, true)
-	for node: Node in find_children("*", "Button", true, false):
-		AudioDirector.register_button(node as Button)
-
-
-func _process(delta: float) -> void:
-	if _screen == "game" and _world != null and not _pause_screen.visible and not _tutorial.visible:
-		_run_elapsed += delta
-
-
-func _input(event: InputEvent) -> void:
-	# Observe touch before GUI consumption so tapping Start enables the pad.
-	if event is InputEventScreenTouch and event.pressed:
-		_set_input_method("touch")
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	AudioDirector.unlock_audio()
-	if event is InputEventScreenTouch:
-		_set_input_method("touch")
-	elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
-		_set_input_method("gamepad")
-	elif event is InputEventKey:
-		_set_input_method("keyboard")
-	if event.is_action_pressed("pause"):
-		if _confirm_screen.visible:
-			_cancel_destructive_action()
-		elif _tutorial.visible:
-			get_viewport().set_input_as_handled()
-			return
-		elif _screen == "game":
-			_toggle_pause()
-		elif _screen == "leaderboard":
-			_show_title()
-		get_viewport().set_input_as_handled()
+	_build_voice_player()
+	_load_game_audio()
+	_show_menu()
+	get_viewport().size_changed.connect(_on_viewport_changed)
+	set_process(true)
 
 
 func _build_layers() -> void:
-	_backdrop = TextureRect.new()
-	_backdrop.texture = BACKDROP
-	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ScreenFactory.full_rect(_backdrop)
-	add_child(_backdrop)
-	var wash := ColorRect.new()
-	wash.color = Color(0.03, 0.04, 0.06, 0.15)
-	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ScreenFactory.full_rect(wash)
-	add_child(wash)
-	_arena_frame = ArenaFrameType.new()
-	ScreenFactory.full_rect(_arena_frame)
-	_arena_frame.visible = false
-	add_child(_arena_frame)
-	_world_root = Node2D.new()
-	_world_root.name = "WorldRoot"
-	add_child(_world_root)
-	_foreground = TextureRect.new()
-	_foreground.texture = FOREGROUND
-	_foreground.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_foreground.stretch_mode = TextureRect.STRETCH_SCALE
-	_foreground.modulate = Color(1.0, 1.0, 1.0, 0.18)
-	_foreground.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ScreenFactory.full_rect(_foreground)
-	add_child(_foreground)
-	_filter = ColorRect.new()
-	_filter.color = Color.WHITE
-	_filter.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_filter_material = ShaderMaterial.new()
-	_filter_material.shader = FILTER_SHADER
-	_filter.material = _filter_material
-	ScreenFactory.full_rect(_filter)
-	add_child(_filter)
-	_feedback_flash = ColorRect.new()
-	_feedback_flash.color = Color(0.5, 0.7, 1.0, 0.0)
-	_feedback_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_feedback_flash.z_index = 20
-	ScreenFactory.full_rect(_feedback_flash)
-	add_child(_feedback_flash)
-	_transition = ColorRect.new()
-	_transition.color = Color(0.01, 0.015, 0.025, 0.0)
-	_transition.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_transition.z_index = 90
-	ScreenFactory.full_rect(_transition)
-	add_child(_transition)
+	_background = TextureRect.new()
+	_background.name = "GameArtwork"
+	_background.texture = TITLE_ART
+	_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_background.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ScreenFactory.full_rect(_background)
+	add_child(_background)
+	_wash = ColorRect.new()
+	_wash.color = Color(0.04, 0.025, 0.09, 0.48)
+	_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ScreenFactory.full_rect(_wash)
+	add_child(_wash)
+	_actor_layer = Node2D.new()
+	_actor_layer.name = "LocalFighters"
+	_actor_layer.visible = false
+	add_child(_actor_layer)
+	_fx_layer = ArenaEffects.new()
+	_fx_layer.name = "ArcadeFightEffects"
+	_fx_layer.owner_game = self
+	_fx_layer.z_index = 5
+	add_child(_fx_layer)
+	_page = Control.new()
+	_page.name = "Page"
+	_page.mouse_filter = Control.MOUSE_FILTER_PASS
+	ScreenFactory.full_rect(_page)
+	add_child(_page)
 
 
-func _build_title_screen() -> void:
-	_title_screen = Control.new()
-	ScreenFactory.full_rect(_title_screen)
-	add_child(_title_screen)
-	# Key art owns the screen; the menu is anchored to the left like a console title.
-	_title_art = TitleArtType.new()
-	ScreenFactory.full_rect(_title_art)
-	_title_screen.add_child(_title_art)
-	var panel := PanelContainer.new()
-	_title_panel = panel
-	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	panel.custom_minimum_size = TITLE_DESIGN_SIZE
-	panel.size = TITLE_DESIGN_SIZE
-	panel.z_index = 1
-	_title_screen.add_child(panel)
-	var content := VBoxContainer.new()
-	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 0)
-	panel.add_child(content)
-	# Logo lockup: tracked eyebrow with an accent bar, chrome display title, tagline.
-	_title_eyebrow_row = HBoxContainer.new()
-	_title_eyebrow_row.add_theme_constant_override("separation", 12)
-	_title_eyebrow_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(_title_eyebrow_row)
-	var bar := ColorRect.new()
-	bar.color = ScreenFactory.CYAN
-	bar.custom_minimum_size = Vector2(28.0, 3.0)
-	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_title_eyebrow_row.add_child(bar)
-	_subtitle_label = ScreenFactory.display_label("", 14, ScreenFactory.CYAN, "eyebrow")
-	_title_eyebrow_row.add_child(_subtitle_label)
-	content.add_child(ScreenFactory.spacer(14.0))
-	_title_label = ScreenFactory.display_label("", 64, ScreenFactory.TEXT, "title")
-	_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_title_label.custom_minimum_size = Vector2(TITLE_DESIGN_SIZE.x, 0.0)
-	_title_label.add_theme_constant_override("line_spacing", -10)
-	_title_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.02, 0.06, 0.75))
-	_title_label.add_theme_constant_override("shadow_offset_x", 0)
-	_title_label.add_theme_constant_override("shadow_offset_y", 5)
-	_title_label.add_theme_color_override("font_outline_color", Color("0d1a2e"))
-	_title_label.add_theme_constant_override("outline_size", 6)
-	var logo_material := ShaderMaterial.new()
-	logo_material.shader = LOGO_SHADER
-	logo_material.set_shader_parameter("motion", 0.0 if ScreenFactory.reduced_motion() else 1.0)
-	_title_label.material = logo_material
-	_title_label.resized.connect(_sync_logo_shader)
-	content.add_child(_title_label)
-	content.add_child(ScreenFactory.spacer(12.0))
-	_tagline_label = ScreenFactory.label("", 18, ScreenFactory.MUTED)
-	_tagline_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(_tagline_label)
-	content.add_child(ScreenFactory.spacer(36.0))
-	# Menu list with a sliding selection cursor instead of a column of boxed buttons.
-	_title_menu = MenuListType.new()
-	_title_menu.item_font_size = 24
-	_title_menu.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	content.add_child(_title_menu)
-	_play_button = ScreenFactory.button("", 340.0)
-	_play_button.pressed.connect(_start_new_run)
-	_title_menu.add_child(_play_button)
-	_leaderboard_button = ScreenFactory.button("", 340.0)
-	_leaderboard_button.pressed.connect(_show_leaderboard)
-	_title_menu.add_child(_leaderboard_button)
-	_tutorial_button = ScreenFactory.button("", 340.0)
-	_tutorial_button.pressed.connect(_arm_tutorial)
-	_title_menu.add_child(_tutorial_button)
-	content.add_child(ScreenFactory.spacer(8.0))
-	_title_status = ScreenFactory.label("", 13, ScreenFactory.CYAN)
-	_title_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_title_status.custom_minimum_size = Vector2(452.0, 22.0)
-	content.add_child(_title_status)
-	# Quiet utilities live in the bottom-left corner; key prompts sit bottom-centre.
-	_title_footer = HBoxContainer.new()
-	_title_footer.add_theme_constant_override("separation", 6)
-	_title_footer.z_index = 2
-	_title_screen.add_child(_title_footer)
-	_language_button = ScreenFactory.quiet_button("", 13)
-	var language_chip := ScreenFactory.glass_chip(Color.TRANSPARENT, Vector2(12.0, 5.0))
-	_language_button.add_theme_stylebox_override("normal", language_chip)
-	var language_hover := language_chip.duplicate() as StyleBoxFlat
-	language_hover.border_color = Color(ScreenFactory.CYAN, 0.6)
-	_language_button.add_theme_stylebox_override("hover", language_hover)
-	_language_button.add_theme_color_override("font_color", ScreenFactory.MUTED)
-	_language_button.add_theme_font_override("font", load(ScreenFactory.FONT_MEDIUM) as Font)
-	_language_button.pressed.connect(I18n.toggle_locale)
-	_title_footer.add_child(_language_button)
-	_licenses_button = ScreenFactory.quiet_button("", 12)
-	_licenses_button.name = "OpenSourceLicensesButton"
-	_licenses_button.pressed.connect(OpenSourceLicenses.open.bind(self))
-	_title_footer.add_child(_licenses_button)
-	_title_hints = HBoxContainer.new()
-	_title_hints.add_theme_constant_override("separation", 22)
-	_title_hints.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_title_screen.add_child(_title_hints)
-	for hint: Array in [["↑ ↓", "hint.navigate"], ["Enter", "hint.select"]]:
-		var chip := ScreenFactory.key_hint(hint[0], "")
-		chip.set_meta("locale_key", hint[1])
-		_title_hints.add_child(chip)
-	var title_frame := TextureRect.new()
-	_title_frame = title_frame
-	title_frame.texture = TITLE_FRAME
-	title_frame.visible = false
-	title_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_title_screen.add_child(title_frame)
-	_title_screen.visibility_changed.connect(func() -> void:
-		if _title_screen.visible:
-			_play_title_intro()
-			_play_transition()
+func _build_voice_player() -> void:
+	_voice_player = AudioStreamPlayer.new()
+	_voice_player.name = "SessionVoicePlayer"
+	_voice_player.bus = "SFX"
+	_voice_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_voice_player)
+	_voice_timer = Timer.new()
+	_voice_timer.one_shot = true
+	_voice_timer.timeout.connect(func() -> void:
+		if is_instance_valid(_voice_player):
+			_voice_player.stop()
 	)
-	call_deferred("_play_title_intro")
+	add_child(_voice_timer)
 
 
-func _chrome_material(line_height: float) -> ShaderMaterial:
-	var chrome := ShaderMaterial.new()
-	chrome.shader = LOGO_SHADER
-	chrome.set_shader_parameter("line_height", line_height)
-	chrome.set_shader_parameter("sweep_width", 500.0)
-	chrome.set_shader_parameter("motion", 0.0 if ScreenFactory.reduced_motion() else 1.0)
-	return chrome
+func _load_game_audio() -> void:
+	AudioDirector.register_cue("music.title", MUSIC_PATH)
+	AudioDirector.register_cue("music.gameplay", MUSIC_PATH)
+	AudioDirector.register_cue("fight.punch", "res://assets/game/audio/punch.mp3")
+	AudioDirector.register_cue("fight.kick", "res://assets/game/audio/kick.mp3")
+	AudioDirector.register_cue("fight.jump", "res://assets/game/audio/jump.mp3")
+	AudioDirector.register_cue("fight.special", "res://assets/game/audio/special.mp3")
+	AudioDirector.register_cue("game.victory", "res://assets/game/audio/victory.mp3")
+	AudioDirector.register_cue("game.defeat", "res://assets/game/audio/defeat.mp3")
+	AudioDirector.register_cue("ui.confirm", "res://assets/game/audio/punch.mp3")
+	AudioDirector.register_cue("ui.cancel", "res://assets/game/audio/jump.mp3")
 
 
-func _sync_logo_shader() -> void:
-	var logo_material := _title_label.material as ShaderMaterial
-	if logo_material == null:
+func _process(delta: float) -> void:
+	if _dialogue_time > 0.0:
+		_dialogue_time = maxf(0.0, _dialogue_time - delta)
+		if _dialogue_time == 0.0 and is_instance_valid(_hud_dialogue):
+			_hud_dialogue.text = ""
+	for particle: Dictionary in _fx_particles:
+		particle.position += particle.velocity * delta
+		particle.velocity *= 0.92
+		particle.life -= delta
+	_fx_particles = _fx_particles.filter(func(p: Dictionary) -> bool: return float(p.life) > 0.0)
+	if _screen != "arena" or _phase == "paused" or _phase == "finished":
 		return
-	var pitch := float(_title_label.get_line_height()) + float(_title_label.get_theme_constant("line_spacing"))
-	logo_material.set_shader_parameter("line_height", maxf(pitch, 1.0))
-	logo_material.set_shader_parameter("sweep_width", _title_label.size.x)
-
-
-## Staggered title entrance: art rises in, eyebrow/logo settle, menu items slide in.
-func _play_title_intro() -> void:
-	_title_art.play_intro()
-	var parts: Array[Control] = [_title_eyebrow_row, _title_label, _tagline_label, _title_status, _title_footer, _title_hints]
-	if ScreenFactory.reduced_motion():
-		for part: Control in parts:
-			part.modulate.a = 1.0
-		_title_label.scale = Vector2.ONE
-		_title_menu.play_intro()
+	if _phase == "countdown":
+		_countdown -= delta
+		if _countdown <= 0.0:
+			if is_instance_valid(_vs_overlay):
+				_vs_overlay.visible = false
+			_phase = "fight"
+			_round_timer = FightRulesType.ROUND_DURATION_SECONDS
+			_set_dialogue(_pick_quip(_actor_one.fighter, "start"), _actor_one.fighter, 1.65, false)
+			_play_sound("ui.confirm")
+		else:
+			if is_instance_valid(_vs_overlay):
+				_vs_overlay.visible = _countdown > 3.0
+			if is_instance_valid(_hud_dialogue):
+				_hud_dialogue.text = "FRIENDS BY DAY. ENEMIES IN THE ARENA." if _countdown > 3.0 else "ROUND %d\n%d" % [_round_number, maxi(1, ceili(_countdown))]
+			_refresh_hud()
 		return
-	for part: Control in parts:
-		part.modulate.a = 0.0
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(_title_eyebrow_row, "modulate:a", 1.0, 0.3).set_delay(0.08)
-	_title_label.pivot_offset = Vector2(0.0 if _title_label.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT else _title_label.size.x * 0.5, _title_label.size.y * 0.5)
-	_title_label.scale = Vector2(1.14, 1.14)
-	tween.tween_property(_title_label, "modulate:a", 1.0, 0.35).set_delay(0.14)
-	tween.tween_property(_title_label, "scale", Vector2.ONE, 0.7).set_delay(0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(_tagline_label, "modulate:a", 1.0, 0.4).set_delay(0.36)
-	tween.tween_property(_title_status, "modulate:a", 1.0, 0.3).set_delay(0.7)
-	tween.tween_property(_title_footer, "modulate:a", 1.0, 0.45).set_delay(0.85)
-	tween.tween_property(_title_hints, "modulate:a", 1.0, 0.45).set_delay(0.9)
-	_title_menu.play_intro(0.42)
-
-
-## Short fade-from-black between title and gameplay.
-func _play_transition() -> void:
-	if _transition == null or ScreenFactory.reduced_motion():
-		return
-	_transition.color.a = 1.0
-	create_tween().tween_property(_transition, "color:a", 0.0, 0.38).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-
-func _layout_title(portrait: bool, menu_scale: float) -> void:
-	var alignment := HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
-	for label: Label in [_title_label, _tagline_label, _title_status]:
-		label.horizontal_alignment = alignment
-	_title_eyebrow_row.alignment = BoxContainer.ALIGNMENT_CENTER if portrait else BoxContainer.ALIGNMENT_BEGIN
-	_title_menu.size_flags_horizontal = Control.SIZE_SHRINK_CENTER if portrait else Control.SIZE_SHRINK_BEGIN
-	_title_hints.visible = not portrait
-	var content := _title_panel.get_child(0) as VBoxContainer
-	var frame := _title_panel.get_theme_stylebox("panel") as StyleBoxEmpty
-	if portrait:
-		# Portrait: a tall centred panel with the lockup + menu at the bottom and the key art above it.
-		content.alignment = BoxContainer.ALIGNMENT_END
-		frame.content_margin_bottom = 80.0
-		_fit_centered(_title_panel, TITLE_PORTRAIT_SIZE, 2.0)
-		var panel_scale := _title_panel.scale.y
-		var top := _title_panel.position.y + _title_panel.size.y * (1.0 - panel_scale) * 0.5
-		var bottom := top + _title_panel.size.y * panel_scale
-		var content_top := bottom - (content.get_combined_minimum_size().y + frame.content_margin_bottom) * panel_scale
-		_title_art.art_scale = clampf((content_top - top) / 620.0, 0.55, 1.7)
-		_title_art.hero_position = Vector2(size.x * 0.5, (top + content_top) * 0.5)
-	else:
-		content.alignment = BoxContainer.ALIGNMENT_CENTER
-		frame.content_margin_bottom = 0.0
-		_title_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		_title_panel.size = TITLE_DESIGN_SIZE.max(_title_panel.get_combined_minimum_size())
-		var fit := minf(1.0, (size.y - 120.0) / _title_panel.size.y)
-		_title_panel.pivot_offset = Vector2.ZERO
-		_title_panel.scale = Vector2.ONE * fit
-		_title_panel.set_meta("fit_scale", _title_panel.scale)
-		_title_panel.position = Vector2(maxf(56.0, size.x * 0.07), (size.y - _title_panel.size.y * fit) * 0.5 - 12.0)
-		_title_art.art_scale = clampf(size.y / 720.0, 0.7, 1.4)
-		_title_art.hero_position = Vector2(maxf(size.x * 0.715, _title_panel.position.x + 520.0 * fit + 330.0 * _title_art.art_scale), size.y * 0.5)
-	menu_scale = 2.0 if portrait else 1.0
-	var margin := 24.0 * menu_scale
-	_title_footer.scale = Vector2.ONE * menu_scale
-	_title_footer.size = _title_footer.get_combined_minimum_size()
-	_title_footer.position = Vector2(margin, size.y - _title_footer.size.y * menu_scale - margin)
-	_title_hints.size = _title_hints.get_combined_minimum_size()
-	_title_hints.position = Vector2((size.x - _title_hints.size.x) * 0.5, size.y - _title_hints.size.y - 30.0)
-
-
-func _make_stat(caption_color: Color, value_color: Color) -> Array[Label]:
-	var block := VBoxContainer.new()
-	block.add_theme_constant_override("separation", -2)
-	block.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	block.alignment = BoxContainer.ALIGNMENT_CENTER
-	var caption := ScreenFactory.display_label("", 11, caption_color, "eyebrow")
-	var value := ScreenFactory.display_label("", 26, value_color, "heading")
-	value.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.55))
-	value.add_theme_constant_override("outline_size", 4)
-	value.add_theme_color_override("font_shadow_color", Color(value_color, 0.35))
-	value.add_theme_constant_override("shadow_offset_y", 0)
-	value.add_theme_constant_override("shadow_outline_size", 8)
-	block.add_child(caption)
-	block.add_child(value)
-	return [caption, value]
-
-
-## Split a localized "CAPTION  {token}suffix" string into a small caption and a big value
-## so HUD numbers can use the display face without changing localization keys.
-func _stat_parts(key: String, token: String, value: String) -> PackedStringArray:
-	var template := I18n.text(key)
-	var marker := "{%s}" % token
-	var at := template.find(marker)
-	if at < 0:
-		return PackedStringArray([template, value])
-	var prefix := template.substr(0, at).strip_edges()
-	var suffix := template.substr(at + marker.length()).strip_edges()
-	return PackedStringArray([prefix, value + suffix])
-
-
-## Glass HUD widget: accent edge, optional icon, caption/value stack.
-func _make_chip(icon: Texture2D, stat: Array[Label], accent: Color) -> PanelContainer:
-	var chip := PanelContainer.new()
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_theme_stylebox_override("panel", ScreenFactory.glass_chip(accent, Vector2(14.0, 6.0)))
-	chip.draw.connect(func() -> void:
-		chip.draw_line(Vector2(10.0, 1.0), Vector2(chip.size.x - 10.0, 1.0), Color(1.0, 1.0, 1.0, 0.14), 1.0)
-	)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_child(row)
-	if icon != null:
-		var picture := TextureRect.new()
-		picture.texture = icon
-		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		picture.custom_minimum_size = Vector2(28.0, 28.0)
-		picture.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		picture.name = "Icon"
-		row.add_child(picture)
-	row.add_child(stat[0].get_parent())
-	return chip
-
-
-func _build_hud() -> void:
-	_hud = Control.new()
-	ScreenFactory.full_rect(_hud)
-	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_hud)
-	# Transparent layout strip: widgets are grouped as separate glass chips, not one dashboard bar.
-	var panel := PanelContainer.new()
-	_hud_panel = panel
-	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.minimum_size_changed.connect(_layout_world)
-	panel.anchor_right = 1.0
-	panel.offset_left = 26.0
-	panel.offset_top = 16.0
-	panel.offset_right = -26.0
-	panel.offset_bottom = 92.0
-	_hud.add_child(panel)
-	var column := VBoxContainer.new()
-	column.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_theme_constant_override("separation", 6)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(column)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_BEGIN
-	row.add_theme_constant_override("separation", 12)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(row)
-	var score := _make_stat(ScreenFactory.SUBTLE, ScreenFactory.TEXT)
-	var stage := _make_stat(ScreenFactory.SUBTLE, ScreenFactory.TEXT)
-	var lives := _make_stat(ScreenFactory.SUBTLE, ScreenFactory.CORAL)
-	_score_caption = score[0]
-	_score_label = score[1]
-	_stage_caption = stage[0]
-	_stage_label = stage[1]
-	_lives_caption = lives[0]
-	_lives_label = lives[1]
-	_hud_chips = [
-		_make_chip(ENERGY_ICON, score, ScreenFactory.CYAN),
-		_make_chip(null, stage, ScreenFactory.VIOLET),
-		_make_chip(RUNNER_ART, lives, ScreenFactory.CORAL),
-	]
-	# Stage progress as segmented pips next to the stage number.
-	_stage_pips = Control.new()
-	_stage_pips.custom_minimum_size = Vector2(34.0, 26.0)
-	_stage_pips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_stage_pips.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_stage_pips.draw.connect(_draw_stage_pips)
-	(_stage_label.get_parent().get_parent() as HBoxContainer).add_child(_stage_pips)
-	for chip: PanelContainer in _hud_chips:
-		row.add_child(chip)
-	_power_label = ScreenFactory.medium_label("", 14, Color("c9d6e6"))
-	_power_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_power_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_power_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_power_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_power_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_power_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.6))
-	_power_label.add_theme_constant_override("outline_size", 4)
-	row.add_child(_power_label)
-	_pause_button = ScreenFactory.button("", 104.0)
-	_pause_button.custom_minimum_size.y = 40.0
-	_pause_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_pause_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	_pause_button.icon = _pause_icon()
-	_pause_button.add_theme_constant_override("h_separation", 10)
-	_pause_button.add_theme_color_override("icon_normal_color", ScreenFactory.CYAN)
-	_pause_button.add_theme_color_override("icon_hover_color", Color.WHITE)
-	_pause_button.add_theme_color_override("icon_focus_color", Color.WHITE)
-	_pause_button.pressed.connect(_toggle_pause)
-	row.add_child(_pause_button)
-	_stage_banner = ScreenFactory.display_label("", 34, ScreenFactory.TEXT, "heading")
-	_stage_banner.set_anchors_preset(Control.PRESET_CENTER)
-	_stage_banner.position = Vector2(-260.0, -44.0)
-	_stage_banner.size = Vector2(520.0, 88.0)
-	_stage_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_stage_banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_stage_banner.add_theme_color_override("font_outline_color", Color(ScreenFactory.CYAN, 0.35))
-	_stage_banner.add_theme_constant_override("outline_size", 6)
-	# Full-width holo band with bright rims: a "STAGE CLEAR" broadcast, not a card.
-	var banner_style := ScreenFactory.style_box(Color(0.03, 0.05, 0.08, 0.9), Color(ScreenFactory.CYAN, 0.7), 0, 0)
-	banner_style.border_width_top = 2
-	banner_style.border_width_bottom = 2
-	banner_style.expand_margin_left = 2000.0
-	banner_style.expand_margin_right = 2000.0
-	banner_style.shadow_color = Color(ScreenFactory.CYAN, 0.18)
-	banner_style.shadow_size = 24
-	_stage_banner.add_theme_stylebox_override("normal", banner_style)
-	_stage_banner.visible = false
-	_stage_banner.visibility_changed.connect(func() -> void:
-		if not _stage_banner.visible or ScreenFactory.reduced_motion():
-			return
-		_stage_banner.pivot_offset = _stage_banner.size * 0.5
-		_stage_banner.scale = Vector2(1.0, 0.2)
-		_stage_banner.modulate.a = 0.0
-		var tween := create_tween().set_parallel(true)
-		tween.tween_property(_stage_banner, "scale", Vector2.ONE, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tween.tween_property(_stage_banner, "modulate:a", 1.0, 0.18)
-	)
-	_hud.add_child(_stage_banner)
-	_hud.visible = false
-	_hud.visibility_changed.connect(func() -> void:
-		_arena_frame.visible = _hud.visible
-		if _hud.visible:
-			_play_transition()
-	)
-
-
-func _pause_icon() -> ImageTexture:
-	var image := Image.create(18, 18, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	image.fill_rect(Rect2i(3, 2, 4, 14), Color.WHITE)
-	image.fill_rect(Rect2i(11, 2, 4, 14), Color.WHITE)
-	return ImageTexture.create_from_image(image)
-
-
-func _draw_stage_pips() -> void:
-	var total := StageCatalog.count()
-	var gap := 4.0
-	var width := (_stage_pips.size.x - gap * float(total - 1)) / float(total)
-	for index: int in total:
-		var rect := Rect2(Vector2(index * (width + gap), _stage_pips.size.y * 0.5 - 3.0), Vector2(width, 6.0))
-		var done := index <= _stage_index
-		_stage_pips.draw_rect(rect, Color(ScreenFactory.CYAN, 0.95) if done else Color(1.0, 1.0, 1.0, 0.12))
-		if index == _stage_index:
-			_stage_pips.draw_rect(rect.grow(2.0), Color(ScreenFactory.CYAN, 0.25), false, 1.0)
-
-
-## Number punch: scale kick + colour flash whenever a HUD value changes.
-func _punch(label: Label, flash: Color) -> void:
-	if ScreenFactory.reduced_motion() or not label.is_visible_in_tree():
-		return
-	label.pivot_offset = Vector2(0.0, label.size.y * 0.5)
-	label.scale = Vector2(1.22, 1.22)
-	label.modulate = flash
-	var tween := label.create_tween().set_parallel(true)
-	tween.tween_property(label, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(label, "modulate", Color.WHITE, 0.3)
-
-
-func _hud_divider() -> StyleBoxLine:
-	var line := StyleBoxLine.new()
-	line.color = Color("2c3440")
-	line.vertical = true
-	line.thickness = 1
-	line.grow_begin = -6.0
-	line.grow_end = -6.0
-	return line
-
-
-func _menu_heading(content: VBoxContainer, font_size: int, color: Color) -> Label:
-	var heading := ScreenFactory.display_label("", font_size, color, "title")
-	heading.add_theme_color_override("font_shadow_color", Color(0.0, 0.02, 0.06, 0.8))
-	heading.add_theme_constant_override("shadow_offset_y", 4)
-	heading.material = _chrome_material(float(font_size) * 1.3)
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	heading.custom_minimum_size.x = 360.0
-	content.add_child(heading)
-	content.add_child(ScreenFactory.spacer(14.0))
-	content.add_child(ScreenFactory.accent_rule(32.0, color))
-	content.add_child(ScreenFactory.spacer(24.0))
-	return heading
-
-
-func _build_pause_screen() -> void:
-	_pause_screen = _make_overlay()
-	add_child(_pause_screen)
-	var panel := _center_panel(_pause_screen, Vector2(460.0, 420.0), ScreenFactory.CYAN)
-	_pause_panel = panel
-	panel.z_index = 1
-	var content := VBoxContainer.new()
-	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 0)
-	panel.add_child(content)
-	_pause_title = _menu_heading(content, 34, ScreenFactory.TEXT)
-	var actions := MenuListType.new()
-	_pause_menu = actions
-	actions.item_font_size = 21
-	actions.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	content.add_child(actions)
-	_resume_button = ScreenFactory.button("", 280.0)
-	ScreenFactory.primary(_resume_button)
-	_resume_button.pressed.connect(_toggle_pause)
-	actions.add_child(_resume_button)
-	_restart_button = ScreenFactory.button("", 280.0)
-	_restart_button.pressed.connect(_request_destructive_action.bind("restart"))
-	actions.add_child(_restart_button)
-	_pause_title_button = ScreenFactory.button("", 280.0)
-	_pause_title_button.pressed.connect(_request_destructive_action.bind("title"))
-	actions.add_child(_pause_title_button)
-	var pause_frame := TextureRect.new()
-	_pause_frame = pause_frame
-	pause_frame.texture = PAUSE_FRAME
-	pause_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pause_frame.stretch_mode = TextureRect.STRETCH_SCALE
-	pause_frame.modulate.a = 0.12
-	pause_frame.set_anchors_preset(Control.PRESET_CENTER)
-	pause_frame.position = Vector2(-290.0, -270.0)
-	pause_frame.size = Vector2(580.0, 540.0)
-	pause_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pause_frame.z_index = 0
-	pause_frame.visible = false
-	_pause_screen.add_child(pause_frame)
-	content.add_child(ScreenFactory.spacer(18.0))
-	var resume_hint := ScreenFactory.key_hint("Esc", "")
-	resume_hint.set_meta("locale_key", "pause.resume")
-	resume_hint.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	content.add_child(resume_hint)
-	ScreenFactory.install_modal_motion(_pause_screen, panel)
-	_pause_screen.visibility_changed.connect(func() -> void:
-		if _pause_screen.visible:
-			_pause_menu.play_intro(0.05)
-	)
-	_pause_screen.visible = false
-
-
-func _build_confirmation_screen() -> void:
-	_confirm_screen = _make_overlay()
-	_confirm_screen.z_index = 60
-	add_child(_confirm_screen)
-	var panel := _center_panel(_confirm_screen, Vector2(520.0, 300.0), ScreenFactory.CORAL)
-	_confirm_panel = panel
-	var content := VBoxContainer.new()
-	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 0)
-	panel.add_child(content)
-	var warning := ScreenFactory.display_label("!", 22, ScreenFactory.CORAL, "title")
-	warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var warning_style := ScreenFactory.style_box(Color(ScreenFactory.CORAL, 0.12), Color(ScreenFactory.CORAL, 0.6), 18, 2)
-	warning_style.set_content_margin_all(0.0)
-	warning.add_theme_stylebox_override("normal", warning_style)
-	warning.custom_minimum_size = Vector2(36.0, 36.0)
-	warning.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	warning.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	content.add_child(warning)
-	content.add_child(ScreenFactory.spacer(14.0))
-	_confirm_title = ScreenFactory.display_label("", 26, ScreenFactory.TEXT, "heading")
-	_confirm_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(_confirm_title)
-	content.add_child(ScreenFactory.spacer(10.0))
-	_confirm_message = ScreenFactory.label("", 16, ScreenFactory.MUTED)
-	_confirm_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_confirm_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_confirm_message.custom_minimum_size.x = 400.0
-	content.add_child(_confirm_message)
-	content.add_child(ScreenFactory.spacer(28.0))
-	var actions := HBoxContainer.new()
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 18)
-	content.add_child(actions)
-	_confirm_accept_button = ScreenFactory.button("", 190.0)
-	_confirm_accept_button.add_theme_color_override("font_color", ScreenFactory.CORAL)
-	_confirm_accept_button.add_theme_color_override("font_focus_color", Color("ffd2cc"))
-	_confirm_accept_button.add_theme_stylebox_override("normal", ScreenFactory.plate(Color(0.16, 0.08, 0.09, 0.92), Color(ScreenFactory.CORAL, 0.45)))
-	_confirm_accept_button.add_theme_stylebox_override("hover", ScreenFactory.plate(Color(0.24, 0.11, 0.12, 0.96), ScreenFactory.CORAL, Color(ScreenFactory.CORAL, 0.25)))
-	_confirm_accept_button.add_theme_stylebox_override("focus", ScreenFactory._plate_focus(ScreenFactory.CORAL))
-	_confirm_accept_button.pressed.connect(_confirm_destructive_action)
-	actions.add_child(_confirm_accept_button)
-	_confirm_cancel_button = ScreenFactory.button("", 190.0)
-	ScreenFactory.primary(_confirm_cancel_button)
-	_confirm_cancel_button.pressed.connect(_cancel_destructive_action)
-	actions.add_child(_confirm_cancel_button)
-	ScreenFactory.install_modal_motion(_confirm_screen, panel)
-	_confirm_screen.visible = false
-
-
-func _build_result_screen() -> void:
-	_result_screen = _make_overlay()
-	add_child(_result_screen)
-	var panel := _center_panel(_result_screen, Vector2(580.0, 610.0), ScreenFactory.CYAN)
-	_result_panel = panel
-	var content := VBoxContainer.new()
-	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 0)
-	panel.add_child(content)
-	_result_title = _menu_heading(content, 36, ScreenFactory.TEXT)
-	_result_score_caption = ScreenFactory.display_label("", 12, ScreenFactory.SUBTLE, "eyebrow")
-	_result_score_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(_result_score_caption)
-	# Big score with a glow halo, counted up when the debrief opens.
-	_result_score = ScreenFactory.display_label("", 76, ScreenFactory.TEXT, "title")
-	_result_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_score.add_theme_constant_override("line_spacing", -8)
-	_result_score.add_theme_color_override("font_shadow_color", Color(0.0, 0.02, 0.06, 0.8))
-	_result_score.add_theme_constant_override("shadow_offset_y", 5)
-	_result_score.material = _chrome_material(99.0)
-	# Soft energy halo behind the number (stylebox draws under the glyphs).
-	var halo := StyleBoxTexture.new()
-	halo.texture = ScreenFactory.radial_glow(Color.WHITE)
-	halo.modulate_color = Color(0.3, 0.55, 1.0, 0.4)
-	halo.expand_margin_left = 60.0
-	halo.expand_margin_right = 60.0
-	halo.expand_margin_top = 10.0
-	halo.expand_margin_bottom = 10.0
-	_result_score.add_theme_stylebox_override("normal", halo)
-	content.add_child(_result_score)
-	# Stats strip: stage progress pips + run time chip.
-	var stats := HBoxContainer.new()
-	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override("separation", 14)
-	content.add_child(stats)
-	_result_pips = Control.new()
-	_result_pips.custom_minimum_size = Vector2(72.0, 24.0)
-	_result_pips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_result_pips.draw.connect(_draw_result_pips)
-	stats.add_child(_result_pips)
-	_result_time = ScreenFactory.medium_label("", 15, ScreenFactory.TEXT)
-	_result_time.add_theme_stylebox_override("normal", ScreenFactory.glass_chip(Color.TRANSPARENT, Vector2(12.0, 4.0)))
-	stats.add_child(_result_time)
-	content.add_child(ScreenFactory.spacer(26.0))
-	_result_name_label = ScreenFactory.display_label("", 11, ScreenFactory.SUBTLE, "eyebrow")
-	_result_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(_result_name_label)
-	content.add_child(ScreenFactory.spacer(8.0))
-	var form := HBoxContainer.new()
-	form.alignment = BoxContainer.ALIGNMENT_CENTER
-	form.add_theme_constant_override("separation", 14)
-	content.add_child(form)
-	_name_input = LineEdit.new()
-	_name_input.text = SaveStore.get_player_name()
-	_name_input.max_length = 18
-	_name_input.custom_minimum_size = Vector2(250.0, 46.0)
-	_name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_name_input.add_theme_font_size_override("font_size", 18)
-	_name_input.add_theme_font_override("font", load(ScreenFactory.FONT_MENU) as Font)
-	_name_input.add_theme_color_override("font_color", ScreenFactory.TEXT)
-	_name_input.add_theme_color_override("font_placeholder_color", ScreenFactory.SUBTLE)
-	_name_input.add_theme_color_override("caret_color", ScreenFactory.CYAN)
-	_name_input.add_theme_color_override("selection_color", Color(ScreenFactory.CYAN, 0.3))
-	# Inset "terminal" field: dark well with a glowing underline instead of a bordered box.
-	var field := ScreenFactory.style_box(Color(0.0, 0.0, 0.0, 0.35), Color(1.0, 1.0, 1.0, 0.18), 4, 0)
-	field.border_width_bottom = 2
-	_name_input.add_theme_stylebox_override("normal", field)
-	var field_focus := field.duplicate() as StyleBoxFlat
-	field_focus.border_color = ScreenFactory.CYAN
-	field_focus.bg_color = Color(ScreenFactory.CYAN, 0.08)
-	field_focus.shadow_color = Color(ScreenFactory.CYAN, 0.2)
-	field_focus.shadow_size = 10
-	_name_input.add_theme_stylebox_override("focus", field_focus)
-	form.add_child(_name_input)
-	_submit_button = ScreenFactory.button("", 150.0)
-	form.add_child(_submit_button)
-	_submit_button.pressed.connect(_submit_score)
-	content.add_child(ScreenFactory.spacer(6.0))
-	_result_status = ScreenFactory.label("", 13, ScreenFactory.CYAN)
-	_result_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_result_status.custom_minimum_size = Vector2(440.0, 22.0)
-	content.add_child(_result_status)
-	content.add_child(ScreenFactory.spacer(16.0))
-	var actions := HBoxContainer.new()
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 18)
-	content.add_child(actions)
-	_play_again_button = ScreenFactory.button("", 210.0)
-	ScreenFactory.primary(_play_again_button)
-	_play_again_button.pressed.connect(_start_new_run)
-	actions.add_child(_play_again_button)
-	var standings := ScreenFactory.button("", 210.0)
-	standings.custom_minimum_size.y = 52.0
-	standings.pressed.connect(_show_leaderboard)
-	standings.set_meta("locale_key", "menu.leaderboard")
-	actions.add_child(standings)
-	content.add_child(ScreenFactory.spacer(10.0))
-	_result_title_button = ScreenFactory.quiet_button("", 14)
-	_result_title_button.add_theme_color_override("font_color", ScreenFactory.MUTED)
-	_result_title_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_result_title_button.pressed.connect(_show_title)
-	content.add_child(_result_title_button)
-	ScreenFactory.install_modal_motion(_result_screen, panel)
-	_result_screen.visibility_changed.connect(_play_result_reveal)
-	_result_screen.visible = false
-
-
-## Debrief reveal: the score counts up with a settle kick, then the stage pips light up.
-func _play_result_reveal() -> void:
-	if not _result_screen.visible:
-		return
-	_result_pips.queue_redraw()
-	if ScreenFactory.reduced_motion():
-		_result_reveal = 1.0
-		_refresh_result_texts()
-		return
-	_result_reveal = 0.0
-	var tween := create_tween()
-	tween.tween_method(_set_result_reveal, 0.0, 1.0, 0.95).set_delay(0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_callback(func() -> void:
-		_result_score.pivot_offset = _result_score.size * 0.5
-		_result_score.scale = Vector2(1.12, 1.12)
-		_result_score.create_tween().tween_property(_result_score, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	)
-
-
-func _set_result_reveal(value: float) -> void:
-	_result_reveal = value
-	var parts := _stat_parts("result.score", "score", str(roundi(float(_run_score) * value)))
-	_result_score.text = parts[1]
-	_result_pips.queue_redraw()
-
-
-func _draw_result_pips() -> void:
-	var total := StageCatalog.count()
-	var reached := _stage_index + 1 if _run_completed else _stage_index
-	var gap := 6.0
-	var width := (_result_pips.size.x - gap * float(total - 1)) / float(total)
-	for index: int in total:
-		var lit := clampf(_result_reveal * float(total) - float(index), 0.0, 1.0) if index < reached else 0.0
-		var rect := Rect2(Vector2(index * (width + gap), _result_pips.size.y * 0.5 - 4.0), Vector2(width, 8.0))
-		_result_pips.draw_rect(rect, Color(1.0, 1.0, 1.0, 0.1))
-		if lit > 0.0:
-			_result_pips.draw_rect(Rect2(rect.position, Vector2(rect.size.x * lit, rect.size.y)), ScreenFactory.CYAN)
-			_result_pips.draw_rect(rect.grow(3.0), Color(ScreenFactory.CYAN, 0.18 * lit), false, 2.0)
-
-
-func _build_leaderboard_screen() -> void:
-	_leaderboard_screen = _make_overlay()
-	add_child(_leaderboard_screen)
-	var panel := _center_panel(_leaderboard_screen, Vector2(700.0, 620.0), ScreenFactory.CYAN)
-	_leaderboard_panel = panel
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 0)
-	panel.add_child(content)
-	_leaderboard_title = _menu_heading(content, 34, ScreenFactory.TEXT)
-	_leaderboard_rows = VBoxContainer.new()
-	_leaderboard_rows.add_theme_constant_override("separation", 6)
-	_leaderboard_rows.custom_minimum_size = Vector2(600.0, 400.0)
-	_leaderboard_rows.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	content.add_child(_leaderboard_rows)
-	content.add_child(ScreenFactory.spacer(16.0))
-	var footer := HBoxContainer.new()
-	footer.alignment = BoxContainer.ALIGNMENT_CENTER
-	footer.add_theme_constant_override("separation", 18)
-	content.add_child(footer)
-	_leaderboard_back_button = ScreenFactory.button("", 200.0)
-	_leaderboard_back_button.pressed.connect(_show_title)
-	footer.add_child(_leaderboard_back_button)
-	footer.add_child(ScreenFactory.key_hint("Esc", ""))
-	ScreenFactory.install_modal_motion(_leaderboard_screen, panel)
-	_leaderboard_screen.visible = false
-
-
-func _make_overlay() -> Control:
-	var overlay := Control.new()
-	ScreenFactory.full_rect(overlay)
-	ScreenFactory.modal_backdrop(overlay)
-	return overlay
-
-
-func _center_panel(parent: Control, panel_size: Vector2, border: Color) -> PanelContainer:
-	var panel := ScreenFactory.holo_panel(border, Vector2(44.0, 34.0))
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = -panel_size * 0.5
-	panel.size = panel_size
-	panel.custom_minimum_size = panel_size
-	parent.add_child(panel)
-	return panel
-
-
-func _build_skip_tutorial_button() -> void:
-	_skip_tutorial_button = ScreenFactory.button("", 170.0)
-	_skip_tutorial_button.z_index = 81
-	_skip_tutorial_button.pressed.connect(_skip_tutorial)
-	_skip_tutorial_button.visible = false
-	add_child(_skip_tutorial_button)
-
-
-func _build_touch_controls() -> void:
-	_touch_controls = Control.new()
-	_touch_controls.name = "TouchControls"
-	_touch_controls.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_touch_controls.position = Vector2(20.0, -198.0)
-	_touch_controls.size = Vector2(190.0, 178.0)
-	_touch_controls.z_index = 45
-	add_child(_touch_controls)
-	var directions := {
-		"↑": {"position": Vector2(64.0, 0.0), "direction": Vector2i.UP},
-		"←": {"position": Vector2(0.0, 58.0), "direction": Vector2i.LEFT},
-		"↓": {"position": Vector2(64.0, 116.0), "direction": Vector2i.DOWN},
-		"→": {"position": Vector2(128.0, 58.0), "direction": Vector2i.RIGHT},
-	}
-	for glyph: String in directions:
-		var button := ScreenFactory.button(glyph, 58.0)
-		button.position = directions[glyph].position
-		button.custom_minimum_size = Vector2(58.0, 58.0)
-		button.size = Vector2(58.0, 58.0)
-		button.focus_mode = Control.FOCUS_NONE
-		button.modulate.a = 0.82
-		for state: String in ["normal", "hover", "pressed"]:
-			var key := ScreenFactory.style_box(Color(0.06, 0.08, 0.11, 0.78) if state != "pressed" else Color(ScreenFactory.CYAN, 0.35), Color(ScreenFactory.CYAN, 0.35 if state == "normal" else 0.8), 29, 2)
-			key.shadow_color = Color(0.0, 0.0, 0.0, 0.4)
-			key.shadow_size = 10
-			button.add_theme_stylebox_override(state, key)
-		button.button_down.connect(_on_touch_direction.bind(directions[glyph].direction))
-		_touch_controls.add_child(button)
-	_touch_controls.visible = false
-
-
-func _ensure_gamepad_bindings() -> void:
-	var axes := {
-		"move_left": [JOY_AXIS_LEFT_X, -1.0],
-		"move_right": [JOY_AXIS_LEFT_X, 1.0],
-		"move_up": [JOY_AXIS_LEFT_Y, -1.0],
-		"move_down": [JOY_AXIS_LEFT_Y, 1.0],
-	}
-	for action: String in axes:
-		var motion := InputEventJoypadMotion.new()
-		motion.axis = axes[action][0]
-		motion.axis_value = axes[action][1]
-		InputMap.action_add_event(action, motion)
-	var buttons := {
-		"move_left": JOY_BUTTON_DPAD_LEFT,
-		"move_right": JOY_BUTTON_DPAD_RIGHT,
-		"move_up": JOY_BUTTON_DPAD_UP,
-		"move_down": JOY_BUTTON_DPAD_DOWN,
-		"pause": JOY_BUTTON_START,
-	}
-	for action: String in buttons:
-		var button := InputEventJoypadButton.new()
-		button.button_index = buttons[action]
-		InputMap.action_add_event(action, button)
-
-
-func _on_touch_direction(direction: Vector2i) -> void:
-	_set_input_method("touch")
-	if _world != null:
-		_world.request_player_direction(direction)
-
-
-func _set_input_method(method: String) -> void:
-	if method not in ["keyboard", "gamepad", "touch"]:
-		return
-	_input_method = method
-	if _tutorial_state == 0 and _tutorial != null and _tutorial.visible:
-		_tutorial.set_input_hint(_tutorial_input_hint())
-	if _touch_controls != null:
-		_touch_controls.visible = method == "touch" and _screen == "game" and not _pause_screen.visible and not _tutorial.visible
-
-
-func _show_feedback(kind: String) -> void:
-	if _feedback_flash == null:
-		return
-	var colors := {
-		"reward": Color(0.5, 0.72, 1.0, 0.07),
-		"impact": Color(0.7, 0.8, 1.0, 0.10),
-		"damage": Color(1.0, 0.35, 0.3, 0.14),
-		"stage_clear": Color(0.75, 0.9, 1.0, 0.12),
-	}
-	_feedback_flash.color = colors.get(kind, Color(1.0, 1.0, 1.0, 0.12))
-	var duration := 0.08 if bool(TuningStore.get_value("ui.reduced_motion", false)) else 0.28
-	var tween := create_tween()
-	tween.tween_property(_feedback_flash, "color:a", 0.0, duration)
-
-
-func _start_new_run() -> void:
-	AudioDirector.unlock_audio()
-	_stage_index = 0
-	_run_score = 0
-	_tutorial_run = _force_tutorial or not SaveStore.is_tutorial_completed()
-	TuningStore.begin_run(_tutorial_run)
-	_run_lives = int(TuningStore.get_value("player.lives", 3.0))
-	_run_elapsed = 0.0
-	_score_saved = false
-	_run_completed = false
-	_run_result.clear()
-	_score_service = RunScoreServiceType.new()
-	_score_service.begin()
-	AudioDirector.play_music("music.gameplay")
-	_start_stage()
-
-
-func _start_stage() -> void:
-	AudioDirector.set_game_paused(false)
-	_tutorial.visible = false
-	_skip_tutorial_button.visible = false
-	_clear_world()
-	TuningStore.apply_boundary("NEXT_STAGE")
-	_stage_start_score = _run_score
-	_stage_start_lives = _run_lives
-	_screen = "game"
-	_title_screen.visible = false
-	_result_screen.visible = false
-	_leaderboard_screen.visible = false
-	_pause_screen.visible = false
-	_confirm_screen.visible = false
-	_hud.visible = true
-	_world = MazeWorldType.new()
-	_world_root.add_child(_world)
-	_world.setup(StageCatalog.get_stage(_stage_index), _run_score, _run_lives, _score_service)
-	_world.stats_changed.connect(_on_stats_changed)
-	_world.effects_changed.connect(_on_effects_changed)
-	_world.player_moved.connect(_on_tutorial_player_moved)
-	_world.pellet_collected.connect(_on_tutorial_pellet_collected)
-	_world.stage_completed.connect(_on_stage_completed)
-	_world.run_failed.connect(_on_run_failed)
-	_world.feedback_requested.connect(_show_feedback)
-	_layout_world()
-	_sync_world_actor_visibility()
-	_on_stats_changed(_run_score, _run_lives)
-	_on_effects_changed({})
-	if _stage_index == 0 and _tutorial_run:
-		_begin_tutorial()
-	_set_input_method(_input_method)
-
-
-func _restart_stage() -> void:
-	_run_score = _stage_start_score
-	_run_lives = _stage_start_lives
-	_score_service.begin(_stage_start_score)
-	_pause_screen.visible = false
-	_start_stage()
-
-
-func _on_stage_completed(updated_score: int, updated_lives: int) -> void:
-	_run_score = updated_score
-	_run_lives = updated_lives
-	_stage_banner.text = I18n.text("result.stage_clear", {"stage": _stage_index + 1})
-	_stage_banner.visible = true
-	await get_tree().create_timer(1.1).timeout
-	_stage_banner.visible = false
-	if _stage_index + 1 < StageCatalog.count():
-		_stage_index += 1
-		_start_stage()
-	else:
-		_finish_run(true)
-
-
-func _on_run_failed(updated_score: int) -> void:
-	_run_score = updated_score
-	_run_lives = 0
-	_finish_run(false)
-
-
-func _finish_run(completed: bool) -> void:
-	_screen = "result"
-	_run_completed = completed
-	_run_result = _score_service.finalize(
-		_stage_index + 1,
-		"victory" if completed else "defeat",
-		_run_elapsed,
-		TuningStore.is_ranked_eligible(),
-		TuningStore.configuration_marker(),
-		_tutorial_run,
-	)
-	TuningStore.end_run()
-	AudioDirector.play_cue("game.victory" if completed else "game.defeat")
-	if _world != null:
-		_world.set_simulation_active(false)
-	_hud.visible = false
-	_pause_screen.visible = false
-	_confirm_screen.visible = false
-	_result_screen.visible = true
-	_score_saved = false
-	_submit_button.disabled = false
-	_result_status.text = ""
-	_name_input.text = SaveStore.get_player_name()
-	_refresh_result_texts()
-	_submit_button.grab_focus()
-
-
-func _submit_score() -> void:
-	if _score_saved:
-		return
-	SaveStore.record_result(_name_input.text, _run_result)
-	_score_saved = true
-	_submit_button.disabled = true
-	_result_status.text = I18n.t("result.saved_local")
-
-
-func _show_title() -> void:
-	AudioDirector.set_game_paused(false)
-	_tutorial.visible = false
-	_skip_tutorial_button.visible = false
-	TuningStore.end_run()
-	_clear_world()
-	_screen = "title"
-	_title_screen.visible = true
-	_hud.visible = false
-	_pause_screen.visible = false
-	_confirm_screen.visible = false
-	_result_screen.visible = false
-	_leaderboard_screen.visible = false
-	_tutorial_state = -1
-	_title_status.text = ""
-	AudioDirector.play_music("music.title")
-	_set_input_method(_input_method)
-	_play_button.grab_focus()
-
-
-func _show_leaderboard() -> void:
-	if _world != null:
-		_world.set_simulation_active(false)
-	_screen = "leaderboard"
-	_title_screen.visible = false
-	_hud.visible = false
-	_pause_screen.visible = false
-	_confirm_screen.visible = false
-	_result_screen.visible = false
-	_leaderboard_screen.visible = true
-	_refresh_leaderboard_rows()
-	_leaderboard_back_button.grab_focus()
-
-
-func _refresh_leaderboard_rows() -> void:
-	for child: Node in _leaderboard_rows.get_children():
-		child.queue_free()
-	var rows := SaveStore.get_leaderboard()
-	if rows.is_empty():
-		var empty := ScreenFactory.label(I18n.text("leaderboard.empty"), 18, ScreenFactory.MUTED)
-		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		empty.custom_minimum_size.y = 120.0
-		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_leaderboard_rows.add_child(empty)
-		return
-	# The localized row template separates columns with runs of spaces; render them as a table.
-	var columns := PackedStringArray()
-	for part: String in I18n.t("leaderboard.row").split("   ", false):
-		if not part.strip_edges().is_empty():
-			columns.append(part.strip_edges())
-	var medal_colors := [Color("ffd27a"), Color("d5dde8"), Color("e0a07a")]
-	for index: int in rows.size():
-		var row: Dictionary = rows[index]
-		var values := {
-			"rank": index + 1,
-			"name": row.name,
-			"score": row.score,
-			"stage": row.stage,
-			"time": "%.1f" % float(row.time),
-		}
-		var leader := index == 0
-		var line := PanelContainer.new()
-		var line_style := ScreenFactory.plate(
-			Color(ScreenFactory.CYAN, 0.13) if leader else Color(1.0, 1.0, 1.0, 0.045 if index % 2 == 0 else 0.02),
-			Color(ScreenFactory.CYAN, 0.55) if leader else Color(1.0, 1.0, 1.0, 0.05),
-			Color(ScreenFactory.CYAN, 0.16) if leader else Color.TRANSPARENT,
-			0.12,
-		)
-		line_style.content_margin_top = 5.0
-		line_style.content_margin_bottom = 5.0
-		line_style.content_margin_left = 14.0
-		line_style.content_margin_right = 18.0
-		line.add_theme_stylebox_override("panel", line_style)
-		line.custom_minimum_size.y = 40.0
-		var cells := HBoxContainer.new()
-		cells.add_theme_constant_override("separation", 16)
-		line.add_child(cells)
-		for column: int in columns.size():
-			var text := columns[column]
-			for token: String in values:
-				text = text.replace("{%s}" % token, str(values[token]))
-			var cell: Label
-			if column == 0:
-				# "{rank}. {name}" → rank badge + name.
-				var split := text.find(". ")
-				if split > 0:
-					var badge := ScreenFactory.display_label(text.substr(0, split), 14, ScreenFactory.INK if index < 3 else ScreenFactory.MUTED, "heading")
-					badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-					badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-					badge.custom_minimum_size = Vector2(28.0, 28.0)
-					badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-					var badge_style := ScreenFactory.style_box(medal_colors[index] if index < 3 else Color(1.0, 1.0, 1.0, 0.06), Color(1.0, 1.0, 1.0, 0.5 if index < 3 else 0.1), 14, 1)
-					badge_style.set_content_margin_all(0.0)
-					badge.add_theme_stylebox_override("normal", badge_style)
-					cells.add_child(badge)
-					text = text.substr(split + 2)
-				cell = ScreenFactory.medium_label(text, 17, ScreenFactory.TEXT)
-				cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				cell.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-			elif column == 1:
-				cell = ScreenFactory.display_label(text, 19, ScreenFactory.CYAN if leader else ScreenFactory.TEXT, "heading")
-				cell.custom_minimum_size.x = 96.0
-				cell.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	if _phase == "round_result":
+		_between_round_timer -= delta
+		if _between_round_timer <= 0.0:
+			if _round_wins[0] >= FightRulesType.rounds_needed_to_win() or _round_wins[1] >= FightRulesType.rounds_needed_to_win():
+				_finish_match()
 			else:
-				cell = ScreenFactory.label(text, 15, ScreenFactory.MUTED)
-				cell.custom_minimum_size.x = 76.0
-				cell.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			cell.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			cells.add_child(cell)
-		_leaderboard_rows.add_child(line)
-		if not ScreenFactory.reduced_motion():
-			line.modulate.a = 0.0
-			create_tween().tween_property(line, "modulate:a", 1.0, 0.25).set_delay(0.12 + index * 0.05)
+				_round_number += 1
+				_start_round()
+		_refresh_hud()
+		return
+	if _phase != "fight":
+		return
+	_step_combat(delta)
+	if _mode != "practice":
+		_round_timer = maxf(0.0, _round_timer - delta)
+	if _actor_one.health <= 0 or _actor_two.health <= 0:
+		_resolve_round(0 if _actor_one.health > _actor_two.health else 1)
+	elif _mode != "practice" and _round_timer <= 0.0:
+		if _actor_one.health == _actor_two.health:
+			_round_timer = 12.0
+			_set_dialogue("SUDDEN DEATH — last hit wins!", _actor_one.fighter, 1.5, false)
+		else:
+			_resolve_round(0 if _actor_one.health > _actor_two.health else 1)
+	_refresh_hud()
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			if _screen == "arena":
+				_toggle_pause()
+			elif _screen == "pause":
+				_resume_match()
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			if _screen == "pause":
+				_resume_match()
+	if event is InputEventScreenTouch and event.pressed:
+		_on_user_gesture()
+
+
+func _on_viewport_changed() -> void:
+	if is_instance_valid(_touch_pad):
+		_touch_pad.visible = _should_show_touch_controls()
+	if _screen == "arena":
+		_layout_fighters()
+	if is_instance_valid(_fx_layer):
+		_fx_layer.queue_redraw()
+
+
+func _new_page(screen_name: String) -> Control:
+	if is_instance_valid(_page):
+		_page.queue_free()
+	_page = Control.new()
+	_page.name = "%sPage" % screen_name.capitalize()
+	_page.mouse_filter = Control.MOUSE_FILTER_PASS
+	ScreenFactory.full_rect(_page)
+	add_child(_page)
+	_screen = screen_name
+	return _page
+
+
+func _place(control: Control, left: float, top: float, right: float, bottom: float, inset: Vector4 = Vector4.ZERO) -> void:
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = inset.x
+	control.offset_top = inset.y
+	control.offset_right = inset.z
+	control.offset_bottom = inset.w
+
+
+func _add_label(parent: Control, text: String, font_size: int, color: Color, rect: Rect2, kind: String = "heading", centered: bool = false) -> Label:
+	var label := ScreenFactory.display_label(text, font_size, color, kind)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if centered:
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(label, rect.position.x, rect.position.y, rect.size.x, rect.size.y)
+	parent.add_child(label)
+	return label
+
+
+func _make_button(parent: Control, caption: String, rect: Rect2, action: Callable, primary: bool = false, accent: Color = Color("43e9ff")) -> Button:
+	var button := ScreenFactory.button(caption, 180.0)
+	button.custom_minimum_size = Vector2(0.0, 46.0)
+	button.add_theme_font_size_override("font_size", 15)
+	if primary:
+		button.add_theme_color_override("font_color", Color("0c1021"))
+		button.add_theme_color_override("font_hover_color", Color("0c1021"))
+		button.add_theme_color_override("font_pressed_color", Color("0c1021"))
+		button.add_theme_stylebox_override("normal", ScreenFactory.plate(accent, Color(accent, 0.95), Color(accent, 0.22)))
+		button.add_theme_stylebox_override("hover", ScreenFactory.plate(accent.lightened(0.12), Color.WHITE, Color(accent, 0.38)))
+		button.add_theme_stylebox_override("pressed", ScreenFactory.plate(accent.darkened(0.08), accent, Color(accent, 0.16)))
+	else:
+		button.add_theme_stylebox_override("normal", ScreenFactory.plate(Color(0.06, 0.055, 0.105, 0.92), Color(accent, 0.42), Color(accent, 0.08)))
+		button.add_theme_stylebox_override("hover", ScreenFactory.plate(Color(0.11, 0.08, 0.17, 0.98), Color(accent, 0.88), Color(accent, 0.20)))
+		button.add_theme_stylebox_override("pressed", ScreenFactory.plate(Color(0.08, 0.06, 0.14, 0.98), accent))
+	_place(button, rect.position.x, rect.position.y, rect.size.x, rect.size.y)
+	parent.add_child(button)
+	button.pressed.connect(_on_user_gesture)
+	button.pressed.connect(action)
+	AudioDirector.register_button(button)
+	return button
+
+
+func _add_back_button(parent: Control, return_to: Callable, caption: String = "← BACK") -> void:
+	_make_button(parent, caption, Rect2(0.82, 0.045, 0.96, 0.12), return_to, false, Color("ff4eb5"))
+
+
+func _on_user_gesture() -> void:
+	AudioDirector.unlock_audio()
+	if _sound_enabled and _music_enabled and not _music_started:
+		_music_started = AudioDirector.play_music("music.title")
+	elif _sound_enabled and _music_enabled and not AudioDirector._music_cue.is_empty():
+		return
+	elif _sound_enabled and _music_enabled and _music_started:
+		AudioDirector.play_music("music.title")
+
+
+func _play_sound(cue_id: String, pitch: float = 1.0) -> void:
+	if _sound_enabled:
+		AudioDirector.play_cue(cue_id, pitch)
+
+
+func _start_game_music() -> void:
+	if not _sound_enabled or not _music_enabled:
+		return
+	AudioDirector.unlock_audio()
+	_music_started = AudioDirector.play_music("music.gameplay")
+
+
+func _show_menu() -> void:
+	get_tree().paused = false
+	_phase = "idle"
+	_actor_layer.visible = false
+	_background.texture = TITLE_ART
+	_wash.color = Color(0.035, 0.022, 0.075, 0.54)
+	var page := _new_page("menu")
+	var panel := ScreenFactory.panel(Color(0.035, 0.028, 0.075), Color(0.22, 0.23, 0.38, 0.55), Vector2(26, 22))
+	_place(panel, 0.035, 0.06, 0.535, 0.95, Vector4(0, 0, 0, 0))
+	page.add_child(panel)
+	var title_one := _add_label(page, "CSM FIGHT", 62, Color("43e9ff"), Rect2(0.075, 0.105, 0.49, 0.205), "title")
+	title_one.add_theme_color_override("font_shadow_color", Color(0.1, 0.75, 1.0, 0.55))
+	title_one.add_theme_constant_override("shadow_offset_x", 0)
+	title_one.add_theme_constant_override("shadow_offset_y", 5)
+	_add_label(page, "KARO LITE", 58, Color("ff4eb5"), Rect2(0.075, 0.205, 0.49, 0.31), "title")
+	_add_label(page, "FRIENDS BY DAY. ENEMIES IN THE ARENA.", 15, Color("e0d8f0"), Rect2(0.078, 0.31, 0.49, 0.37), "eyebrow")
+	_add_label(page, "LOCAL 1V1  •  VS AI  •  PRACTICE", 13, Color("b4aacb"), Rect2(0.078, 0.37, 0.49, 0.415), "heading")
+	var menu_actions: Array[Array] = [
+		["PLAY NOW", Callable(self, "_show_selection")],
+		["CHARACTER COLLECTION", Callable(self, "_show_collection")],
+		["CUSTOMIZE FIGHTER", Callable(self, "_show_customize")],
+		["HOW TO PLAY", Callable(self, "_show_howto")],
+		["SETTINGS", Callable(self, "_show_settings")]
+	]
+	for index: int in menu_actions.size():
+		var top := 0.445 + float(index) * 0.095
+		_make_button(page, str(menu_actions[index][0]), Rect2(0.075, top, 0.485, top + 0.074), menu_actions[index][1], index == 0, Color("43e9ff") if index == 0 else Color("b58aff"))
+	_add_label(page, "NO LOGIN  •  NO BACKEND  •  SESSION ONLY", 11, Color("a398b8"), Rect2(0.078, 0.94, 0.49, 0.98), "eyebrow")
+	_add_label(page, "12 FIGHTERS  /  2 RIVAL GANGS", 13, Color("e9defb"), Rect2(0.58, 0.87, 0.96, 0.93), "eyebrow", true)
+	_add_label(page, "Custom photos and match results stay in memory for this session.", 11, Color("bfb4d2"), Rect2(0.58, 0.92, 0.96, 0.97), "heading", true)
+
+
+func _show_selection() -> void:
+	_actor_layer.visible = false
+	_background.texture = TITLE_ART
+	_wash.color = Color(0.035, 0.022, 0.08, 0.84)
+	var page := _new_page("selection")
+	_add_label(page, "PICK YOUR SIDE", 36, Color("f8f4ff"), Rect2(0.04, 0.025, 0.70, 0.10), "title")
+	_add_label(page, "Player 1 stays in CSM Gang. Player 2 / CPU stays in Opposite Gang.", 15, Color("cec3df"), Rect2(0.045, 0.105, 0.75, 0.155), "heading")
+	_add_back_button(page, Callable(self, "_show_menu"), "← MENU")
+	var left_panel := _new_panel(page, Rect2(0.035, 0.19, 0.49, 0.79), Color("43e9ff"))
+	var right_panel := _new_panel(page, Rect2(0.51, 0.19, 0.965, 0.79), Color("ff4eb5"))
+	_add_label(left_panel, "PLAYER 1   /   CSM GANG", 19, Color("43e9ff"), Rect2(0.035, 0.025, 0.96, 0.11), "eyebrow", true)
+	_add_label(left_panel, "Selected: %s" % FighterRosterType.name_for_id(_selected_p1), 14, Color("f5f0ff"), Rect2(0.04, 0.11, 0.96, 0.17), "heading", true)
+	_add_label(right_panel, "PLAYER 2   /   OPPOSITE GANG", 19, Color("ff77c8"), Rect2(0.035, 0.025, 0.965, 0.11), "eyebrow", true)
+	_add_label(right_panel, "Selected: %s" % FighterRosterType.name_for_id(_selected_p2), 14, Color("f5f0ff"), Rect2(0.04, 0.11, 0.96, 0.17), "heading", true)
+	var p1_grid := GridContainer.new()
+	p1_grid.columns = 4
+	p1_grid.add_theme_constant_override("h_separation", 8)
+	p1_grid.add_theme_constant_override("v_separation", 9)
+	_place(p1_grid, 0.035, 0.20, 0.97, 0.95, Vector4(0, 0, 0, -8))
+	left_panel.add_child(p1_grid)
+	for fighter_id: String in FighterRosterType.team_ids("csm"):
+		var fighter := FighterRosterType.fighter_by_id(fighter_id)
+		p1_grid.add_child(_fighter_card(fighter, 1, fighter_id == _selected_p1, Color("43e9ff")))
+	var p2_grid := GridContainer.new()
+	p2_grid.columns = 2
+	p2_grid.add_theme_constant_override("h_separation", 14)
+	p2_grid.add_theme_constant_override("v_separation", 12)
+	_place(p2_grid, 0.08, 0.23, 0.92, 0.92)
+	right_panel.add_child(p2_grid)
+	for fighter_id: String in FighterRosterType.team_ids("opposite"):
+		var fighter := FighterRosterType.fighter_by_id(fighter_id)
+		p2_grid.add_child(_fighter_card(fighter, 2, fighter_id == _selected_p2, Color("ff4eb5")))
+	_make_button(page, "CONTINUE TO GAME MODE  →", Rect2(0.34, 0.835, 0.67, 0.92), Callable(self, "_show_mode_selection"), true)
+	_add_label(page, "Character choices are locked to each gang.", 12, Color("c3b8d5"), Rect2(0.35, 0.92, 0.65, 0.97), "heading", true)
+
+
+func _new_panel(parent: Control, rect: Rect2, accent: Color) -> Control:
+	var panel := ScreenFactory.holo_panel(accent, Vector2(17, 14))
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	_place(panel, rect.position.x, rect.position.y, rect.size.x, rect.size.y)
+	parent.add_child(panel)
+	var content := Control.new()
+	content.mouse_filter = Control.MOUSE_FILTER_PASS
+	ScreenFactory.full_rect(content)
+	panel.add_child(content)
+	return content
+
+
+func _fighter_card(fighter: Dictionary, slot: int, selected: bool, accent: Color) -> Button:
+	var button := Button.new()
+	button.custom_minimum_size = Vector2(118, 135)
+	button.focus_mode = Control.FOCUS_ALL
+	button.add_theme_stylebox_override("normal", ScreenFactory.plate(Color(0.045, 0.042, 0.085, 0.9), Color(accent, 0.9 if selected else 0.32), Color(accent, 0.12 if selected else 0.025), 0.08))
+	button.add_theme_stylebox_override("hover", ScreenFactory.plate(Color(0.10, 0.07, 0.15, 0.98), Color(accent, 0.92), Color(accent, 0.18), 0.08))
+	button.add_theme_stylebox_override("focus", ScreenFactory.plate(Color.TRANSPARENT, accent, Color(accent, 0.2), 0.08))
+	var art := TextureRect.new()
+	var path := str(fighter.get("avatar", ""))
+	if ResourceLoader.exists(path):
+		art.texture = load(path) as Texture2D
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_place(art, 0.06, 0.04, 0.94, 0.69)
+	button.add_child(art)
+	var name_label := ScreenFactory.display_label(str(fighter.get("name", "Fighter")), 14, Color("f8f4ff"), "heading")
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place(name_label, 0.025, 0.69, 0.975, 0.88)
+	button.add_child(name_label)
+	var move_label := ScreenFactory.label(str(fighter.get("signature", "Special")), 9, accent)
+	move_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	move_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	move_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place(move_label, 0.04, 0.87, 0.96, 0.99)
+	button.add_child(move_label)
+	button.pressed.connect(_on_user_gesture)
+	button.pressed.connect(Callable(self, "_choose_character").bind(slot, str(fighter.id)))
+	AudioDirector.register_button(button)
+	return button
+
+
+func _choose_character(slot: int, fighter_id: String) -> void:
+	if slot == 1:
+		if fighter_id not in FighterRosterType.team_ids("csm"):
+			return
+		_selected_p1 = fighter_id
+	else:
+		if fighter_id not in FighterRosterType.team_ids("opposite"):
+			return
+		_selected_p2 = fighter_id
+	_show_selection()
+
+
+func _show_mode_selection() -> void:
+	_actor_layer.visible = false
+	_wash.color = Color(0.035, 0.022, 0.08, 0.84)
+	var page := _new_page("mode")
+	_add_label(page, "CHOOSE YOUR FIGHT", 38, Color("f8f4ff"), Rect2(0.05, 0.035, 0.70, 0.12), "title")
+	_add_back_button(page, Callable(self, "_show_selection"))
+	_add_label(page, "%s  vs  %s" % [FighterRosterType.name_for_id(_selected_p1), FighterRosterType.name_for_id(_selected_p2)], 19, Color("f3e8ff"), Rect2(0.14, 0.15, 0.86, 0.21), "heading", true)
+	var options: Array[Dictionary] = [
+		{"id":"local", "title":"LOCAL 1V1", "body":"Two friends. One keyboard. No excuses.", "color":Color("43e9ff")},
+		{"id":"cpu", "title":"VS AI", "body":"You as Player 1; your picked rival as CPU.", "color":Color("ff4eb5")},
+		{"id":"practice", "title":"PRACTICE", "body":"Test hits, blocks, jumps and specials.", "color":Color("b68aff")}
+	]
+	for index: int in options.size():
+		var item: Dictionary = options[index]
+		var left := 0.065 + float(index) * 0.30
+		var tile := _new_panel(page, Rect2(left, 0.27, left + 0.27, 0.72), item.color)
+		_add_label(tile, str(item.title), 21, item.color, Rect2(0.05, 0.08, 0.95, 0.22), "eyebrow", true)
+		_add_label(tile, str(item.body), 16, Color("ded5ec"), Rect2(0.08, 0.30, 0.92, 0.59), "heading", true)
+		var action := Callable(self, "_select_mode").bind(str(item.id))
+		_make_button(tile, "SELECT", Rect2(0.10, 0.72, 0.90, 0.90), action, str(item.id) == _mode, item.color)
+	_add_label(page, "VS AI difficulty", 15, Color("f3e8ff"), Rect2(0.28, 0.77, 0.48, 0.84), "eyebrow", true)
+	var difficulty := OptionButton.new()
+	for value: String in ["Easy", "Normal", "Hard"]:
+		difficulty.add_item(value)
+	difficulty.select(1 if _difficulty == "Normal" else (0 if _difficulty == "Easy" else 2))
+	difficulty.custom_minimum_size = Vector2(180, 40)
+	_place(difficulty, 0.48, 0.765, 0.63, 0.84)
+	page.add_child(difficulty)
+	difficulty.item_selected.connect(func(index: int) -> void: _difficulty = ["Easy", "Normal", "Hard"][index])
+	_make_button(page, "START MATCH  →", Rect2(0.36, 0.865, 0.64, 0.94), Callable(self, "_start_match"), true)
+	_add_label(page, "Best of 3 rounds  •  60 seconds each  •  100 HP", 12, Color("bdb1cd"), Rect2(0.34, 0.945, 0.66, 0.98), "heading", true)
+
+
+func _select_mode(mode_id: String) -> void:
+	if mode_id in ["local", "cpu", "practice"]:
+		_mode = mode_id
+	_show_mode_selection()
+
+
+func _show_collection() -> void:
+	_actor_layer.visible = false
+	_wash.color = Color(0.035, 0.022, 0.08, 0.88)
+	var page := _new_page("collection")
+	_add_label(page, "THE COLLECTION", 38, Color("f8f4ff"), Rect2(0.05, 0.035, 0.70, 0.12), "title")
+	_add_label(page, "Twelve personalities. Two locked rival rosters. One campus worth of banter.", 14, Color("cec3df"), Rect2(0.055, 0.13, 0.80, 0.18), "heading")
+	_add_back_button(page, Callable(self, "_show_menu"), "← MENU")
+	var team_rows := [
+		{"title":"CSM GANG", "ids":FighterRosterType.team_ids("csm"), "color":Color("43e9ff"), "left":0.035, "right":0.50},
+		{"title":"OPPOSITE GANG", "ids":FighterRosterType.team_ids("opposite"), "color":Color("ff4eb5"), "left":0.515, "right":0.965}
+	]
+	for team: Dictionary in team_rows:
+		var panel := _new_panel(page, Rect2(float(team.left), 0.22, float(team.right), 0.88), team.color)
+		_add_label(panel, str(team.title), 20, team.color, Rect2(0.035, 0.025, 0.965, 0.10), "eyebrow", true)
+		var scroll := ScrollContainer.new()
+		_place(scroll, 0.035, 0.12, 0.965, 0.98, Vector4(0, 0, 0, -6))
+		panel.add_child(scroll)
+		var column := VBoxContainer.new()
+		column.add_theme_constant_override("separation", 10)
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(column)
+		var ids: Array = team.ids
+		var item_cols := HFlowContainer.new()
+		item_cols.add_theme_constant_override("h_separation", 8)
+		item_cols.add_theme_constant_override("v_separation", 8)
+		item_cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		column.add_child(item_cols)
+		for fighter_id: String in ids:
+			var fighter := FighterRosterType.fighter_by_id(fighter_id)
+			item_cols.add_child(_collection_card(fighter, team.color))
+
+
+func _collection_card(fighter: Dictionary, accent: Color) -> Control:
+	var card := ScreenFactory.panel(Color(0.04, 0.04, 0.085), Color(accent, 0.24), Vector2(12, 8))
+	card.custom_minimum_size = Vector2(198, 184)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 5)
+	card.add_child(column)
+	var art := TextureRect.new()
+	art.texture = load(str(fighter.avatar)) as Texture2D
+	art.custom_minimum_size = Vector2(0, 95)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	column.add_child(art)
+	var name_label := ScreenFactory.display_label(str(fighter.name), 16, Color("f8f4ff"), "heading")
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(name_label)
+	var move_label := ScreenFactory.label(str(fighter.signature), 11, accent)
+	move_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(move_label)
+	var custom_button := ScreenFactory.quiet_button("CUSTOMIZE", 11)
+	custom_button.pressed.connect(_on_user_gesture)
+	custom_button.pressed.connect(Callable(self, "_customize_fighter").bind(str(fighter.id)))
+	column.add_child(custom_button)
+	return card
+
+
+func _customize_fighter(fighter_id: String) -> void:
+	_custom_id = fighter_id
+	_show_customize()
+
+
+func _show_customize() -> void:
+	_actor_layer.visible = false
+	_wash.color = Color(0.035, 0.022, 0.08, 0.90)
+	var page := _new_page("customize")
+	_add_label(page, "MAKE IT YOUR FIGHTER", 34, Color("f8f4ff"), Rect2(0.05, 0.03, 0.73, 0.105), "title")
+	_add_label(page, "All photos, voice clips and custom taunts stay in this tab's memory; nothing is uploaded or saved.", 13, Color("cdbfdc"), Rect2(0.055, 0.112, 0.81, 0.165), "heading")
+	_add_back_button(page, Callable(self, "_show_menu"), "← MENU")
+	var selector := OptionButton.new()
+	for fighter: Dictionary in _roster:
+		selector.add_item("%s  •  %s" % [fighter.name, fighter.team])
+	var selection_index := 0
+	for index: int in _roster.size():
+		if str(_roster[index].id) == _custom_id:
+			selection_index = index
+	selector.select(selection_index)
+	_place(selector, 0.055, 0.20, 0.47, 0.255)
+	page.add_child(selector)
+	selector.item_selected.connect(_on_custom_character_chosen)
+	var portrait_panel := _new_panel(page, Rect2(0.055, 0.29, 0.38, 0.82), Color("43e9ff"))
+	_add_label(portrait_panel, "SESSION FACE CARD", 15, Color("43e9ff"), Rect2(0.05, 0.035, 0.95, 0.12), "eyebrow", true)
+	var frame := PanelContainer.new()
+	frame.add_theme_stylebox_override("panel", ScreenFactory.style_box(Color(0.02, 0.018, 0.04), Color("43e9ff"), 18, 2))
+	_place(frame, 0.12, 0.16, 0.88, 0.72)
+	portrait_panel.add_child(frame)
+	var crop_view := Control.new()
+	crop_view.clip_contents = true
+	crop_view.custom_minimum_size = Vector2(220, 220)
+	frame.add_child(crop_view)
+	_photo_preview = TextureRect.new()
+	_photo_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_photo_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_photo_preview.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_photo_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_photo_preview.size = Vector2(272, 272)
+	_photo_preview.position = Vector2(-26, -26)
+	crop_view.add_child(_photo_preview)
+	_photo_name_label = _add_label(portrait_panel, "Default fighter art", 11, Color("cbc0da"), Rect2(0.08, 0.74, 0.92, 0.82), "heading", true)
+	var photo_button := _make_button(page, "CHOOSE PHOTO", Rect2(0.43, 0.31, 0.69, 0.38), Callable(self, "_open_photo_picker"), true)
+	photo_button.add_theme_font_size_override("font_size", 13)
+	_make_button(page, "APPLY FACE CARD", Rect2(0.70, 0.31, 0.94, 0.38), Callable(self, "_apply_photo"), false)
+	_make_button(page, "REMOVE PHOTO", Rect2(0.70, 0.39, 0.94, 0.46), Callable(self, "_remove_photo"), false, Color("ff9b8e"))
+	_add_label(page, "Crop / position X", 12, Color("f3e8ff"), Rect2(0.44, 0.42, 0.59, 0.47), "eyebrow")
+	_crop_x_slider = _make_slider(page, Rect2(0.59, 0.425, 0.93, 0.47), _draft_crop.x)
+	_add_label(page, "Crop / position Y", 12, Color("f3e8ff"), Rect2(0.44, 0.49, 0.59, 0.54), "eyebrow")
+	_crop_y_slider = _make_slider(page, Rect2(0.59, 0.495, 0.93, 0.54), _draft_crop.y)
+	_crop_x_slider.value_changed.connect(func(value: float) -> void: _draft_crop.x = value; _refresh_face_preview())
+	_crop_y_slider.value_changed.connect(func(value: float) -> void: _draft_crop.y = value; _refresh_face_preview())
+	_add_label(page, "Optional recorded voice clip (.wav, .ogg or .mp3)", 13, Color("f3e8ff"), Rect2(0.43, 0.575, 0.92, 0.625), "eyebrow")
+	_make_button(page, "ADD / REPLACE VOICE", Rect2(0.43, 0.64, 0.69, 0.71), Callable(self, "_open_voice_picker"), false, Color("b68aff"))
+	_make_button(page, "REMOVE VOICE", Rect2(0.70, 0.64, 0.94, 0.71), Callable(self, "_remove_voice"), false, Color("ff9b8e"))
+	_add_label(page, "Custom Special Taunt", 13, Color("f3e8ff"), Rect2(0.43, 0.735, 0.69, 0.79), "eyebrow")
+	_dialogue_input = LineEdit.new()
+	_dialogue_input.placeholder_text = "Add a funny Telugu-English line…"
+	_dialogue_input.max_length = 88
+	_dialogue_input.text = str(_custom_dialogue.get(_custom_id, ""))
+	_place(_dialogue_input, 0.43, 0.79, 0.78, 0.85)
+	page.add_child(_dialogue_input)
+	_make_button(page, "SAVE TAUNT", Rect2(0.79, 0.79, 0.94, 0.85), Callable(self, "_save_custom_dialogue"), false, Color("43e9ff"))
+	_add_label(page, "RAM only  •  never uploaded  •  clears when this session ends", 11, Color("b5aac5"), Rect2(0.43, 0.89, 0.94, 0.94), "heading", true)
+	_refresh_face_preview()
+
+
+func _make_slider(parent: Control, rect: Rect2, value: float) -> HSlider:
+	var slider := HSlider.new()
+	slider.min_value = -1.0
+	slider.max_value = 1.0
+	slider.step = 0.01
+	slider.value = value
+	_place(slider, rect.position.x, rect.position.y, rect.size.x, rect.size.y)
+	parent.add_child(slider)
+	return slider
+
+
+func _on_custom_character_chosen(index: int) -> void:
+	if index >= 0 and index < _roster.size():
+		_custom_id = str(_roster[index].id)
+		_draft_image = null
+		_draft_crop = Vector2.ZERO
+		_show_customize()
+
+
+func _refresh_face_preview() -> void:
+	if not is_instance_valid(_photo_preview):
+		return
+	var fighter := FighterRosterType.fighter_by_id(_custom_id)
+	if _draft_image != null and not _draft_image.is_empty():
+		_photo_preview.texture = ImageTexture.create_from_image(_draft_image)
+		_photo_preview.position = Vector2(-26 - _draft_crop.x * 32.0, -26 - _draft_crop.y * 32.0)
+		_photo_name_label.text = "Photo preview — move sliders to crop"
+	elif _custom_faces.has(_custom_id):
+		_photo_preview.texture = _custom_faces[_custom_id]
+		_photo_preview.position = Vector2(-26, -26)
+		_photo_name_label.text = "Custom face card active in this session"
+	else:
+		_photo_preview.texture = load(str(fighter.avatar)) as Texture2D
+		_photo_preview.position = Vector2(-26, -26)
+		_photo_name_label.text = "Default fighter art"
+
+
+func _open_photo_picker() -> void:
+	_open_upload("photo")
+
+
+func _open_voice_picker() -> void:
+	_open_upload("voice")
+
+
+func _open_upload(kind: String) -> void:
+	_upload_kind = kind
+	if OS.has_feature("web"):
+		var window := JavaScriptBridge.get_interface("window")
+		window.set("__csmUploadResult", JavaScriptBridge.create_callback(Callable(self, "_on_browser_file_selected")))
+		var accept := "image/png,image/jpeg,image/webp" if kind == "photo" else "audio/wav,audio/ogg,audio/mpeg,.wav,.ogg,.mp3"
+		var kind_json := JSON.stringify(kind)
+		var accept_json := JSON.stringify(accept)
+		var script := """
+		(() => {
+		  const pick = document.createElement('input');
+		  pick.type = 'file'; pick.accept = %s;
+		  pick.style.position = 'fixed'; pick.style.left = '-10000px';
+		  const finish = (payload) => { const cb = window.__csmUploadResult; if (cb) cb(payload); delete window.__csmUploadResult; pick.remove(); };
+		  pick.onchange = () => {
+		    const file = pick.files && pick.files[0];
+		    if (!file) { finish(''); return; }
+		    if (file.size > %d) { finish('ERROR:SIZE'); return; }
+		    const allowed = %s === 'photo' ? ['image/png','image/jpeg','image/webp'] : ['audio/wav','audio/x-wav','audio/ogg','audio/mpeg','audio/mp3'];
+		    if (!allowed.includes(file.type) && !/\\.(png|jpe?g|webp|wav|ogg|mp3)$/i.test(file.name)) { finish('ERROR:TYPE'); return; }
+		    const reader = new FileReader();
+		    reader.onerror = () => finish('ERROR:READ');
+		    reader.onload = () => finish(JSON.stringify({ name:file.name, mime:file.type, data:reader.result }));
+		    reader.readAsDataURL(file);
+		  };
+		  document.body.appendChild(pick); pick.click();
+		})();
+		""" % [accept_json, MAX_UPLOAD_BYTES, kind_json]
+		JavaScriptBridge.eval(script, true)
+		return
+	_file_dialog = FileDialog.new()
+	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	_file_dialog.use_native_dialog = false
+	_file_dialog.title = "Choose a session-only %s" % ("photo" if kind == "photo" else "voice recording")
+	_file_dialog.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"] if kind == "photo" else ["*.wav, *.ogg, *.mp3 ; Audio recordings"])
+	_file_dialog.file_selected.connect(_on_native_file_selected)
+	_file_dialog.canceled.connect(func() -> void: if is_instance_valid(_file_dialog): _file_dialog.queue_free())
+	add_child(_file_dialog)
+	_file_dialog.popup_centered_ratio(0.78)
+
+
+func _on_browser_file_selected(payload: Variant) -> void:
+	var raw := str(payload)
+	if raw.is_empty():
+		return
+	if raw.begins_with("ERROR:"):
+		var message := "File is too large (6 MB maximum)." if raw == "ERROR:SIZE" else "Unsupported file; use PNG/JPG/WEBP for photos or WAV/OGG/MP3 for audio."
+		_show_dialog_notice(message)
+		return
+	var parsed: Variant = JSON.parse_string(raw)
+	if not parsed is Dictionary:
+		_show_dialog_notice("That file could not be read.")
+		return
+	var data_uri := str(parsed.get("data", ""))
+	var comma := data_uri.find(",")
+	if comma < 0:
+		_show_dialog_notice("That file could not be decoded.")
+		return
+	var bytes := Marshalls.base64_to_raw(data_uri.substr(comma + 1))
+	_process_upload(str(parsed.get("name", "photo")), str(parsed.get("mime", "")), bytes)
+
+
+func _on_native_file_selected(path: String) -> void:
+	var bytes := FileAccess.get_file_as_bytes(path)
+	_process_upload(path.get_file(), path.get_extension().to_lower(), bytes)
+	if is_instance_valid(_file_dialog):
+		_file_dialog.queue_free()
+
+
+func _process_upload(file_name: String, mime: String, bytes: PackedByteArray) -> void:
+	if bytes.is_empty() or bytes.size() > MAX_UPLOAD_BYTES:
+		_show_dialog_notice("Choose a file smaller than 6 MB.")
+		return
+	if _upload_kind == "photo":
+		var image := Image.new()
+		var error := ERR_FILE_UNRECOGNIZED
+		var kind := mime.to_lower()
+		if kind.contains("png") or file_name.to_lower().ends_with(".png"):
+			error = image.load_png_from_buffer(bytes)
+		elif kind.contains("webp") or file_name.to_lower().ends_with(".webp"):
+			error = image.load_webp_from_buffer(bytes)
+		else:
+			error = image.load_jpg_from_buffer(bytes)
+		if error != OK or image.is_empty():
+			_show_dialog_notice("That photo could not be opened.")
+			return
+		var longest := maxi(image.get_width(), image.get_height())
+		if longest > 1200:
+			var factor := 1200.0 / float(longest)
+			image.resize(maxi(1, roundi(image.get_width() * factor)), maxi(1, roundi(image.get_height() * factor)), Image.INTERPOLATE_LANCZOS)
+		_draft_image = image
+		if is_instance_valid(_photo_name_label):
+			_photo_name_label.text = "%s — preview only" % file_name.get_basename().left(24)
+		_refresh_face_preview()
+		return
+	var extension := file_name.get_extension().to_lower()
+	var stream: AudioStream
+	if extension == "wav" or mime.contains("wav"):
+		stream = AudioStreamWAV.load_from_buffer(bytes)
+	elif extension == "ogg" or mime.contains("ogg"):
+		stream = AudioStreamOggVorbis.load_from_buffer(bytes)
+	elif extension == "mp3" or mime.contains("mpeg") or mime.contains("mp3"):
+		stream = AudioStreamMP3.load_from_buffer(bytes)
+	if stream == null:
+		_show_dialog_notice("That voice recording could not be opened.")
+		return
+	_custom_voice[_custom_id] = stream
+	_show_dialog_notice("Recorded voice added for %s — RAM only." % FighterRosterType.name_for_id(_custom_id))
+
+
+func _create_circular_face(source: Image, crop: Vector2) -> Texture2D:
+	if source == null or source.is_empty():
+		return null
+	var side := mini(source.get_width(), source.get_height())
+	var x_room := source.get_width() - side
+	var y_room := source.get_height() - side
+	var origin_x := clampi(roundi(float(x_room) * (0.5 + crop.x * 0.5)), 0, x_room)
+	var origin_y := clampi(roundi(float(y_room) * (0.5 + crop.y * 0.5)), 0, y_room)
+	var cropped := Image.create(side, side, false, Image.FORMAT_RGBA8)
+	for y: int in side:
+		for x: int in side:
+			cropped.set_pixel(x, y, source.get_pixel(origin_x + x, origin_y + y))
+	cropped.resize(128, 128, Image.INTERPOLATE_LANCZOS)
+	var center := Vector2(63.5, 63.5)
+	for y: int in 128:
+		for x: int in 128:
+			if Vector2(float(x), float(y)).distance_to(center) > 62.5:
+				var pixel := cropped.get_pixel(x, y)
+				pixel.a = 0.0
+				cropped.set_pixel(x, y, pixel)
+	return ImageTexture.create_from_image(cropped)
+
+
+func _apply_photo() -> void:
+	if _draft_image == null or _draft_image.is_empty():
+		_show_dialog_notice("Choose a photo first.")
+		return
+	var crop := Vector2(_crop_x_slider.value if is_instance_valid(_crop_x_slider) else _draft_crop.x, _crop_y_slider.value if is_instance_valid(_crop_y_slider) else _draft_crop.y)
+	_custom_faces[_custom_id] = _create_circular_face(_draft_image, crop)
+	_draft_image = null
+	_draft_crop = crop
+	_refresh_face_preview()
+	if is_instance_valid(_actor_one) and str(_actor_one.fighter.id) == _custom_id:
+		_actor_one.set_face_texture(_custom_faces[_custom_id])
+	if is_instance_valid(_actor_two) and str(_actor_two.fighter.id) == _custom_id:
+		_actor_two.set_face_texture(_custom_faces[_custom_id])
+	_show_dialog_notice("Face card applied for %s. It stays in memory for this session." % FighterRosterType.name_for_id(_custom_id))
+
+
+func _remove_photo() -> void:
+	_custom_faces.erase(_custom_id)
+	_draft_image = null
+	_refresh_face_preview()
+	if is_instance_valid(_actor_one) and str(_actor_one.fighter.id) == _custom_id:
+		_actor_one.set_face_texture(null)
+	if is_instance_valid(_actor_two) and str(_actor_two.fighter.id) == _custom_id:
+		_actor_two.set_face_texture(null)
+
+
+func _remove_voice() -> void:
+	_custom_voice.erase(_custom_id)
+	_show_dialog_notice("Custom voice removed for %s." % FighterRosterType.name_for_id(_custom_id))
+
+
+func _save_custom_dialogue() -> void:
+	if not is_instance_valid(_dialogue_input):
+		return
+	var line := _dialogue_input.text.strip_edges()
+	if line.is_empty():
+		_custom_dialogue.erase(_custom_id)
+	else:
+		_custom_dialogue[_custom_id] = line
+	_show_dialog_notice("Special taunt saved for %s — session only." % FighterRosterType.name_for_id(_custom_id))
+
+
+func _show_dialog_notice(message: String) -> void:
+	var toast := ScreenFactory.panel(Color(0.035, 0.03, 0.075, 0.98), Color("43e9ff"), Vector2(18, 12))
+	toast.z_index = 20
+	var label := ScreenFactory.label(message, 13, Color("f4eaff"))
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	toast.add_child(label)
+	_place(toast, 0.24, 0.83, 0.76, 0.94)
+	_page.add_child(toast)
+	var timer := get_tree().create_timer(2.0)
+	timer.timeout.connect(func() -> void: if is_instance_valid(toast): toast.queue_free())
+
+
+func _show_howto() -> void:
+	_actor_layer.visible = false
+	_wash.color = Color(0.025, 0.02, 0.065, 0.92)
+	var page := _new_page("howto")
+	_add_label(page, "HOW TO PLAY", 40, Color("f8f4ff"), Rect2(0.055, 0.045, 0.70, 0.13), "title")
+	_add_back_button(page, Callable(self, "_show_menu"), "← MENU")
+	var controls := _new_panel(page, Rect2(0.05, 0.19, 0.52, 0.87), Color("43e9ff"))
+	var rules := _new_panel(page, Rect2(0.56, 0.19, 0.95, 0.87), Color("ff4eb5"))
+	_add_label(controls, "PLAYER 1  /  CSM GANG", 17, Color("43e9ff"), Rect2(0.06, 0.04, 0.94, 0.12), "eyebrow")
+	_add_label(controls, "A / D       MOVE\nW             JUMP\nF               PUNCH  •  9 damage\nG              KICK  •  15 damage\nS              BLOCK  •  reduce damage\nH              SIGNATURE SPECIAL  •  25 damage\n\nPLAYER 2  /  OPPOSITE GANG\n← / →       MOVE\n↑              JUMP\nK              PUNCH     •     L  KICK\n↓              BLOCK\n;               SIGNATURE SPECIAL", 16, Color("f2eaff"), Rect2(0.07, 0.15, 0.95, 0.91), "heading")
+	_add_label(rules, "THE RULES", 18, Color("ff77c8"), Rect2(0.06, 0.04, 0.94, 0.12), "eyebrow")
+	_add_label(rules, "BEST OF THREE\nWin two rounds. Each round lasts 60 seconds.\n\nSPECIAL ENERGY\nLand punches or kicks to fill your energy. Save up for the fighter's signature attack.\n\nBLOCK, JUMP, REPEAT\nBlocking reduces incoming damage. Jump to avoid ground attacks. Stay inside the arena.\n\nGAME MODES\nLOCAL 1V1: Two people share a keyboard.\nVS AI: Choose your Opposite Gang rival and difficulty.\nPRACTICE: A stationary opponent; hits reset for repeat practice.\n\nMOBILE\nUse the on-screen movement and combat buttons.\n\nNo online accounts. Photos and results live in memory for this session only.", 15, Color("f2eaff"), Rect2(0.07, 0.16, 0.94, 0.94), "heading")
+	_make_button(page, "GOT IT  →", Rect2(0.39, 0.90, 0.61, 0.97), Callable(self, "_show_menu"), true)
+
+
+func _show_settings() -> void:
+	_actor_layer.visible = false
+	_wash.color = Color(0.025, 0.02, 0.065, 0.90)
+	var page := _new_page("settings")
+	_add_label(page, "ARCADE SETTINGS", 40, Color("f8f4ff"), Rect2(0.06, 0.05, 0.72, 0.14), "title")
+	_add_back_button(page, Callable(self, "_show_menu"), "← MENU")
+	var panel := _new_panel(page, Rect2(0.20, 0.22, 0.80, 0.78), Color("b68aff"))
+	_add_label(panel, "All preferences reset when this session ends.", 14, Color("cec3df"), Rect2(0.08, 0.09, 0.92, 0.17), "heading", true)
+	_make_button(panel, "SOUND: %s" % ("ON" if _sound_enabled else "OFF"), Rect2(0.17, 0.25, 0.83, 0.36), Callable(self, "_toggle_sound"), _sound_enabled, Color("43e9ff"))
+	_make_button(panel, "MUSIC: %s" % ("ON" if _music_enabled else "OFF"), Rect2(0.17, 0.41, 0.83, 0.52), Callable(self, "_toggle_music"), _music_enabled, Color("b68aff"))
+	_make_button(panel, "TELUGU VOICE: %s" % ("ON" if _voice_enabled else "OFF"), Rect2(0.17, 0.57, 0.83, 0.68), Callable(self, "_toggle_voice"), _voice_enabled, Color("ff4eb5"))
+	_add_label(panel, "Personal photos are never uploaded and no game data is written to storage.", 13, Color("c1b5cf"), Rect2(0.06, 0.76, 0.94, 0.88), "heading", true)
+
+
+func _toggle_sound() -> void:
+	_sound_enabled = not _sound_enabled
+	if not _sound_enabled:
+		AudioDirector.stop_music(0.0)
+		_music_started = false
+	_show_settings()
+
+
+func _toggle_music() -> void:
+	_music_enabled = not _music_enabled
+	if _music_enabled and _sound_enabled:
+		_on_user_gesture()
+	elif not _music_enabled:
+		AudioDirector.stop_music()
+		_music_started = false
+	_show_settings()
+
+
+func _toggle_voice() -> void:
+	_voice_enabled = not _voice_enabled
+	if not _voice_enabled and is_instance_valid(_voice_player):
+		_voice_player.stop()
+	_show_settings()
+
+
+func _pick_quip(fighter: Dictionary, kind: String) -> String:
+	var fighter_id := str(fighter.get("id", ""))
+	if kind == "special" and _custom_dialogue.has(fighter_id):
+		return str(_custom_dialogue[fighter_id])
+	var quips: Dictionary = fighter.get("quips", {})
+	var lines: Array = quips.get(kind, quips.get("start", ["Naa range veru ra!"]))
+	if lines.is_empty():
+		return "Naa range veru ra!"
+	var pick: String = str(lines[_rng.randi_range(0, lines.size() - 1)])
+	if pick == _last_dialogue and lines.size() > 1:
+		pick = str(lines[(lines.find(pick) + 1) % lines.size()])
+	return pick
+
+
+func _set_dialogue(line: String, fighter: Dictionary, duration: float = 1.6, voice: bool = true) -> void:
+	_last_dialogue = line
+	_dialogue_time = duration
+	if is_instance_valid(_hud_dialogue):
+		_hud_dialogue.text = line
+	if not voice or not _sound_enabled or not _voice_enabled:
+		return
+	var fighter_id := str(fighter.get("id", ""))
+	if _custom_voice.has(fighter_id):
+		_voice_player.stream = _custom_voice[fighter_id]
+		_voice_player.play()
+		return
+	var voice_path := str(VOICE_PATHS.get(line, ""))
+	if not voice_path.is_empty() and ResourceLoader.exists(voice_path):
+		_voice_player.stream = load(voice_path) as AudioStream
+		_voice_player.play()
+
+
+func _start_match() -> void:
+	if _selected_p1 not in FighterRosterType.team_ids("csm") or _selected_p2 not in FighterRosterType.team_ids("opposite"):
+		return
+	get_tree().paused = false
+	_phase = "countdown"
+	_countdown = 4.4
+	_match_winner = -1
+	_round_wins = [0, 0]
+	_round_number = 1
+	for child: Node in _actor_layer.get_children():
+		child.queue_free()
+	_actor_layer.visible = true
+	var viewport_size := get_viewport_rect().size
+	var portrait := viewport_size.y > viewport_size.x * 1.15
+	var render_scale := 0.68 if portrait else 0.78
+	_actor_one = FighterActorType.new()
+	_actor_one.name = "PlayerOne"
+	_actor_one.setup(FighterRosterType.fighter_by_id(_selected_p1), 1, render_scale)
+	_actor_two = FighterActorType.new()
+	_actor_two.name = "PlayerTwo"
+	_actor_two.setup(FighterRosterType.fighter_by_id(_selected_p2), 2, render_scale)
+	_actor_layer.add_child(_actor_one)
+	_actor_layer.add_child(_actor_two)
+	_apply_face_to_actor(_actor_one)
+	_apply_face_to_actor(_actor_two)
+	_background.texture = ARENA_ART
+	_wash.color = Color(0.035, 0.025, 0.085, 0.35)
+	_fx_particles.clear()
+	_build_arena_hud()
+	_layout_fighters()
+	_start_game_music()
+	_round_timer = FightRulesType.ROUND_DURATION_SECONDS
+	_phase = "countdown"
+	_low_health_seen = [false, false]
+	_attack_cooldowns = [0.0, 0.0]
+	_jump_heights = [0.0, 0.0]
+	_jump_speeds = [0.0, 0.0]
+	_knockback_speeds = [0.0, 0.0]
+	_cpu_decision_timer = 0.55
+	_cpu_block_timer = 0.0
+	_set_dialogue("Orey, internal exam anukunnava?", _actor_one.fighter, 2.0, true)
+
+
+func _apply_face_to_actor(actor: FighterActor) -> void:
+	var fighter_id := str(actor.fighter.get("id", ""))
+	if _custom_faces.has(fighter_id):
+		actor.set_face_texture(_custom_faces[fighter_id])
+
+
+func _layout_fighters() -> void:
+	if not is_instance_valid(_actor_one) or not is_instance_valid(_actor_two):
+		return
+	var size := get_viewport_rect().size
+	var portrait := size.y > size.x * 1.15
+	_ground_y = size.y * (0.56 if portrait else 0.73)
+	_actor_one.position = Vector2(size.x * 0.34, _ground_y)
+	_actor_two.position = Vector2(size.x * 0.66, _ground_y)
+	if is_instance_valid(_fx_layer):
+		_fx_layer.queue_redraw()
+
+
+func _build_arena_hud() -> void:
+	var page := _new_page("arena")
+	_page.process_mode = Node.PROCESS_MODE_ALWAYS
+	_page.z_index = 6
+	_hud_timer = _add_label(page, "60", 31, Color("fff7f0"), Rect2(0.44, 0.025, 0.56, 0.10), "title", true)
+	_hud_round = _add_label(page, "ROUND 1  •  0 — 0", 13, Color("e1d4f4"), Rect2(0.37, 0.105, 0.63, 0.15), "eyebrow", true)
+	_build_player_hud(page, 0)
+	_build_player_hud(page, 1)
+	_build_versus_splash(page)
+	_hud_dialogue = _add_label(page, "", 19, Color("fff4ff"), Rect2(0.16, 0.65, 0.84, 0.74), "heading", true)
+	_hud_pause_button = _make_button(page, "Ⅱ  PAUSE", Rect2(0.86, 0.19, 0.985, 0.255), Callable(self, "_toggle_pause"), false, Color("ff4eb5"))
+	_hud_pause_button.add_theme_font_size_override("font_size", 11)
+	if _should_show_touch_controls():
+		_add_label(page, "HOLD TO MOVE  •  TAP TO JUMP / ATTACK  •  SPECIAL NEEDS FULL ENERGY", 9, Color("e7dbf2"), Rect2(0.08, 0.91, 0.92, 0.97), "heading", true)
+	else:
+		_add_label(page, "P1  A/D move  •  W jump  •  F/G attack  •  S block  •  H special", 10, Color("e7dbf2"), Rect2(0.025, 0.895, 0.58, 0.94), "heading")
+		if _mode == "local":
+			_add_label(page, "P2  ←/→ move  •  ↑ jump  •  K/L attack  •  ↓ block  •  ; special", 10, Color("e7dbf2"), Rect2(0.42, 0.895, 0.96, 0.94), "heading", true)
+		else:
+			_add_label(page, "P2 / CPU: %s  •  %s" % [FighterRosterType.name_for_id(_selected_p2), "PRACTICE DUMMY" if _mode == "practice" else "%s AI" % _difficulty.to_upper()], 10, Color("e7dbf2"), Rect2(0.42, 0.895, 0.96, 0.94), "heading", true)
+	_touch_pad = _build_touch_controls(page)
+	_touch_pad.visible = _should_show_touch_controls()
+
+
+func _build_versus_splash(parent: Control) -> void:
+	_vs_overlay = Control.new()
+	_vs_overlay.name = "VersusSplash"
+	_vs_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vs_overlay.z_index = 1
+	ScreenFactory.full_rect(_vs_overlay)
+	_vs_overlay.visible = _phase == "countdown" and _countdown > 3.0
+	parent.add_child(_vs_overlay)
+	var panel := _new_panel(_vs_overlay, Rect2(0.035, 0.31, 0.965, 0.52), Color("b68aff"))
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var compact := get_viewport_rect().size.x < 620.0
+	var name_size := 16 if compact else 25
+	var p1 := FighterRosterType.fighter_by_id(_selected_p1)
+	var p2 := FighterRosterType.fighter_by_id(_selected_p2)
+	_add_label(panel, "PLAYER 1  •  CSM GANG", 9, Color("43e9ff"), Rect2(0.02, 0.10, 0.43, 0.30), "eyebrow", true)
+	_add_label(panel, str(p1.name).to_upper(), name_size, Color("f8f4ff"), Rect2(0.02, 0.30, 0.43, 0.66), "title", true)
+	_add_label(panel, str(p1.signature), 10, Color("bcefff"), Rect2(0.02, 0.68, 0.43, 0.94), "heading", true)
+	_add_label(panel, "VS", 38 if compact else 52, Color("ff4eb5"), Rect2(0.43, 0.18, 0.57, 0.82), "title", true)
+	_add_label(panel, "PLAYER 2  •  OPPOSITE GANG", 9, Color("ff74c5"), Rect2(0.57, 0.10, 0.98, 0.30), "eyebrow", true)
+	_add_label(panel, str(p2.name).to_upper(), name_size, Color("f8f4ff"), Rect2(0.57, 0.30, 0.98, 0.66), "title", true)
+	_add_label(panel, str(p2.signature), 10, Color("ffd0e9"), Rect2(0.57, 0.68, 0.98, 0.94), "heading", true)
+
+
+func _build_player_hud(parent: Control, player_index: int) -> void:
+	var left := 0.025 if player_index == 0 else 0.60
+	var right := 0.405 if player_index == 0 else 0.98
+	var accent := Color("43e9ff") if player_index == 0 else Color("ff4eb5")
+	var actor := _actor_one if player_index == 0 else _actor_two
+	var panel := _new_panel(parent, Rect2(left, 0.035, right, 0.19), accent)
+	_add_label(panel, "%s   /   %s" % [actor.fighter.name, actor.fighter.team], 15, accent, Rect2(0.035, 0.055, 0.965, 0.29), "eyebrow", player_index == 1)
+	var health := _new_progress_bar(accent)
+	_place(health, 0.06, 0.38, 0.94, 0.58)
+	panel.add_child(health)
+	var energy := _new_progress_bar(Color("b68aff"))
+	_place(energy, 0.06, 0.70, 0.94, 0.87)
+	panel.add_child(energy)
+	_add_label(panel, "HP", 10, Color("f5edff"), Rect2(0.06, 0.58, 0.17, 0.71), "eyebrow")
+	_add_label(panel, "%s  /  100" % actor.fighter.signature, 10, Color("e0d4f3"), Rect2(0.18, 0.58, 0.94, 0.71), "heading", player_index == 1)
+	if player_index == 0:
+		_hud_health_one = health
+		_hud_energy_one = energy
+	else:
+		_hud_health_two = health
+		_hud_energy_two = energy
+
+
+func _new_progress_bar(accent: Color) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.min_value = 0
+	bar.max_value = 100
+	bar.value = 100
+	bar.show_percentage = false
+	bar.add_theme_stylebox_override("background", ScreenFactory.style_box(Color(0.018, 0.018, 0.035, 0.94), Color(1, 1, 1, 0.12), 8, 1))
+	bar.add_theme_stylebox_override("fill", ScreenFactory.style_box(accent, Color(accent, 0.95), 8, 1))
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return bar
+
+
+func _build_touch_controls(parent: Control) -> Control:
+	var holder := Control.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_PASS
+	ScreenFactory.full_rect(holder)
+	parent.add_child(holder)
+	var controls: Array[Dictionary] = [
+		{"text":"◀", "action":"left", "left":0.025, "right":0.13},
+		{"text":"▶", "action":"right", "left":0.14, "right":0.245},
+		{"text":"JUMP", "action":"jump", "left":0.255, "right":0.37},
+		{"text":"PUNCH", "action":"punch", "left":0.55, "right":0.66},
+		{"text":"KICK", "action":"kick", "left":0.665, "right":0.765},
+		{"text":"BLOCK", "action":"block", "left":0.77, "right":0.87},
+		{"text":"SPECIAL", "action":"special", "left":0.875, "right":0.985}
+	]
+	for item: Dictionary in controls:
+		var button := _make_button(holder, str(item.text), Rect2(float(item.left), 0.805, float(item.right), 0.89), Callable(self, "_noop"), false, Color("43e9ff"))
+		button.focus_mode = Control.FOCUS_NONE
+		button.add_theme_font_size_override("font_size", 10)
+		var action_name := str(item.action)
+		button.button_down.connect(_set_touch_action.bind(action_name, true))
+		button.button_up.connect(_set_touch_action.bind(action_name, false))
+	return holder
+
+
+func _set_touch_action(action_name: String, pressed: bool) -> void:
+	_touch_pressed[action_name] = pressed
+
+
+func _noop() -> void:
+	pass
+
+
+func _should_show_touch_controls() -> bool:
+	return DisplayServer.is_touchscreen_available() or DisplayServer.window_get_size().x < 900
+
+
+func _start_round() -> void:
+	_actor_one.health = FightRulesType.STARTING_HEALTH
+	_actor_two.health = FightRulesType.STARTING_HEALTH
+	_actor_one.energy = 0.0
+	_actor_two.energy = 0.0
+	_actor_one.blocking = false
+	_actor_two.blocking = false
+	_jump_heights = [0.0, 0.0]
+	_jump_speeds = [0.0, 0.0]
+	_attack_cooldowns = [0.0, 0.0]
+	_knockback_speeds = [0.0, 0.0]
+	_low_health_seen = [false, false]
+	_round_timer = FightRulesType.ROUND_DURATION_SECONDS
+	_countdown = 3.0
+	_phase = "countdown"
+	_layout_fighters()
+	_actor_one.set_action("idle", 0.15)
+	_actor_two.set_action("idle", 0.15)
+	_set_dialogue("ROUND %d" % _round_number, _actor_one.fighter, 0.8, false)
+	_refresh_hud()
+
+
+func _step_combat(delta: float) -> void:
+	_attack_cooldowns[0] = maxf(0.0, _attack_cooldowns[0] - delta)
+	_attack_cooldowns[1] = maxf(0.0, _attack_cooldowns[1] - delta)
+	if _mode == "cpu":
+		_step_human(1, delta)
+		_step_cpu(delta)
+	elif _mode == "local":
+		_step_human(1, delta)
+		_step_human(2, delta)
+	else:
+		_step_human(1, delta)
+		_actor_two.blocking = false
+		_actor_two.set_action("idle", 0.12)
+	_step_jumps(delta)
+	_step_knockbacks(delta)
+	_resolve_body_collision()
+	_actor_one.face_toward(_actor_two.position.x)
+	_actor_two.face_toward(_actor_one.position.x)
+	if _actor_one.health > 0 and _actor_one.health <= 28 and not _low_health_seen[0]:
+		_low_health_seen[0] = true
+		_show_dialogue("low", _actor_one.fighter)
+	elif _actor_two.health > 0 and _actor_two.health <= 28 and not _low_health_seen[1]:
+		_low_health_seen[1] = true
+		_show_dialogue("low", _actor_two.fighter)
+
+
+func _step_human(slot: int, delta: float) -> void:
+	var actor := _actor_one if slot == 1 else _actor_two
+	var opponent := _actor_two if slot == 1 else _actor_one
+	var left_key := KEY_A if slot == 1 else KEY_LEFT
+	var right_key := KEY_D if slot == 1 else KEY_RIGHT
+	var jump_key := KEY_W if slot == 1 else KEY_UP
+	var left_down := Input.is_physical_key_pressed(left_key) or (slot == 1 and bool(_touch_pressed.get("left", false)))
+	var right_down := Input.is_physical_key_pressed(right_key) or (slot == 1 and bool(_touch_pressed.get("right", false)))
+	var axis := float(int(right_down) - int(left_down))
+	if axis != 0.0:
+		actor.position.x += axis * 305.0 * delta
+		actor.set_action("walk", 0.12)
+	elif actor.blocking:
+		actor.set_action("block", 0.12)
+	else:
+		actor.set_action("idle", 0.15)
+	actor.position.x = clampf(actor.position.x, 34.0, get_viewport_rect().size.x - 34.0)
+	var block_key := KEY_S if slot == 1 else KEY_DOWN
+	var block_down := Input.is_physical_key_pressed(block_key) or (slot == 1 and bool(_touch_pressed.get("block", false)))
+	actor.blocking = block_down
+	if block_down:
+		actor.set_action("block", 0.14)
+	if _edge_pressed(slot, "jump", Input.is_physical_key_pressed(jump_key) or (slot == 1 and bool(_touch_pressed.get("jump", false)))):
+		_start_jump(slot)
+	var punch_key := KEY_F if slot == 1 else KEY_K
+	var kick_key := KEY_G if slot == 1 else KEY_L
+	var punch_down := Input.is_physical_key_pressed(punch_key) or (slot == 1 and bool(_touch_pressed.get("punch", false)))
+	var kick_down := Input.is_physical_key_pressed(kick_key) or (slot == 1 and bool(_touch_pressed.get("kick", false)))
+	var special_down := (Input.is_physical_key_pressed(KEY_H) or bool(_touch_pressed.get("special", false))) if slot == 1 else (Input.is_physical_key_pressed(KEY_SEMICOLON))
+	if _edge_pressed(slot, "punch", punch_down):
+		_try_attack(slot, "punch")
+	elif _edge_pressed(slot, "kick", kick_down):
+		_try_attack(slot, "kick")
+	elif _edge_pressed(slot, "special", special_down):
+		_try_attack(slot, "special")
+	# A real input makes the browser audio context available before the first cue.
+	if axis != 0.0 or punch_down or kick_down or special_down:
+		AudioDirector.unlock_audio()
+
+
+func _edge_pressed(slot: int, action_name: String, pressed: bool) -> bool:
+	var key := "%d:%s" % [slot, action_name]
+	var was_pressed := bool(_key_latches.get(key, false))
+	_key_latches[key] = pressed
+	return pressed and not was_pressed
+
+
+func _start_jump(slot: int) -> void:
+	var actor := _actor_one if slot == 1 else _actor_two
+	if _jump_heights[slot - 1] > 3.0:
+		return
+	_jump_speeds[slot - 1] = 460.0
+	actor.set_action("jump", 0.36)
+	_play_sound("fight.jump")
+
+
+func _step_jumps(delta: float) -> void:
+	for index: int in 2:
+		if _jump_heights[index] > 0.0 or _jump_speeds[index] > 0.0:
+			_jump_heights[index] = maxf(0.0, _jump_heights[index] + _jump_speeds[index] * delta)
+			_jump_speeds[index] -= 980.0 * delta
+		if _jump_heights[index] <= 0.0:
+			_jump_heights[index] = 0.0
+			_jump_speeds[index] = 0.0
+	_actor_one.position.y = _ground_y
+	_actor_two.position.y = _ground_y
+	_actor_one.jump_height = _jump_heights[0]
+	_actor_two.jump_height = _jump_heights[1]
+
+
+func _step_knockbacks(delta: float) -> void:
+	for index: int in 2:
+		if absf(_knockback_speeds[index]) < 4.0:
+			_knockback_speeds[index] = 0.0
+			continue
+		var actor := _actor_one if index == 0 else _actor_two
+		actor.position.x += _knockback_speeds[index] * delta
+		_knockback_speeds[index] *= pow(0.06, delta)
+		actor.position.x = clampf(actor.position.x, 34.0, get_viewport_rect().size.x - 34.0)
+
+
+func _resolve_body_collision() -> void:
+	var separation := _actor_two.position.x - _actor_one.position.x
+	var minimum_gap := 82.0
+	if absf(separation) >= minimum_gap:
+		return
+	var direction := 1.0 if separation >= 0.0 else -1.0
+	var midpoint := (_actor_one.position.x + _actor_two.position.x) * 0.5
+	_actor_one.position.x = clampf(midpoint - direction * minimum_gap * 0.5, 34.0, get_viewport_rect().size.x - 34.0)
+	_actor_two.position.x = clampf(midpoint + direction * minimum_gap * 0.5, 34.0, get_viewport_rect().size.x - 34.0)
+
+
+func _step_cpu(delta: float) -> void:
+	var distance := absf(_actor_two.position.x - _actor_one.position.x)
+	var toward_player := -1.0 if _actor_two.position.x > _actor_one.position.x else 1.0
+	var speed := 178.0
+	var attack_probability := 0.45
+	var defend_probability := 0.09
+	var special_probability := 0.30
+	var cooldown := 0.72
+	match _difficulty:
+		"Normal":
+			speed = 226.0
+			attack_probability = 0.62
+			defend_probability = 0.15
+			special_probability = 0.43
+			cooldown = 0.56
+		"Hard":
+			speed = 280.0
+			attack_probability = 0.82
+			defend_probability = 0.23
+			special_probability = 0.63
+			cooldown = 0.42
+	if _cpu_block_timer > 0.0:
+		_cpu_block_timer -= delta
+		_actor_two.blocking = true
+		_actor_two.set_action("block", 0.12)
+		return
+	_actor_two.blocking = false
+	if distance > 158.0:
+		_actor_two.position.x += toward_player * speed * delta
+		_actor_two.position.x = clampf(_actor_two.position.x, 34.0, get_viewport_rect().size.x - 34.0)
+		_actor_two.set_action("walk", 0.14)
+		return
+	_cpu_decision_timer -= delta
+	if _cpu_decision_timer > 0.0:
+		_actor_two.set_action("idle", 0.18)
+		return
+	_cpu_decision_timer = cooldown + _rng.randf_range(-0.08, 0.16)
+	if _actor_one.energy >= 65.0 and _rng.randf() < defend_probability:
+		_cpu_block_timer = 0.30 + defend_probability
+		_actor_two.blocking = true
+		_actor_two.set_action("block", _cpu_block_timer)
+		return
+	if _actor_two.energy >= FightRulesType.SPECIAL_ENERGY_COST and distance <= FightRulesType.attack_range("special") and _rng.randf() < special_probability:
+		_try_attack(2, "special")
+	elif _rng.randf() < attack_probability:
+		_try_attack(2, "kick" if _rng.randf() < 0.44 else "punch")
+	else:
+		_cpu_block_timer = 0.24
+		_actor_two.blocking = true
+		_actor_two.set_action("block", _cpu_block_timer)
+
+
+func _try_attack(slot: int, action_name: String) -> void:
+	var index := slot - 1
+	if _attack_cooldowns[index] > 0.0:
+		return
+	var attacker := _actor_one if slot == 1 else _actor_two
+	var defender := _actor_two if slot == 1 else _actor_one
+	if action_name == "special":
+		if attacker.energy < FightRulesType.SPECIAL_ENERGY_COST:
+			if slot == 1:
+				_set_dialogue("Charge your special meter with hits!", attacker.fighter, 1.1, false)
+			return
+		attacker.energy = 0.0
+		attacker.set_action("special", 0.52)
+		_play_sound("fight.special")
+		_spawn_sparks(attacker.global_position + Vector2(0, -185), Color(str(attacker.fighter.color)), 22)
+		var custom_taunt := str(_custom_dialogue.get(str(attacker.fighter.id), ""))
+		if not custom_taunt.is_empty():
+			_set_dialogue(custom_taunt, attacker.fighter, 1.8, true)
+		else:
+			_show_dialogue("special", attacker.fighter)
+		_attack_cooldowns[index] = 0.82
+	else:
+		attacker.set_action(action_name, 0.36 if action_name == "punch" else 0.46)
+		_play_sound("fight.punch" if action_name == "punch" else "fight.kick", 1.0 + _rng.randf_range(-0.04, 0.05))
+		_spawn_sparks(attacker.global_position + Vector2(0, -185), Color(str(attacker.fighter.color)), 8)
+		_attack_cooldowns[index] = 0.38 if action_name == "punch" else 0.56
+		_show_dialogue(action_name, attacker.fighter, 1.35, true)
+	var range := FightRulesType.attack_range(action_name)
+	var distance := absf(attacker.position.x - defender.position.x)
+	if distance > range or (defender == _actor_one and _jump_heights[0] > 105.0 and action_name != "special") or (defender == _actor_two and _jump_heights[1] > 105.0 and action_name != "special"):
+		if slot == 1:
+			_set_dialogue("WHIFF! Move closer before you swing.", attacker.fighter, 0.95, false)
+		return
+	var raw := FightRulesType.damage_for(action_name)
+	var damage := FightRulesType.damage_after_block(raw, defender.blocking)
+	defender.health = maxi(0, defender.health - damage)
+	if action_name != "special":
+		attacker.energy = minf(100.0, attacker.energy + FightRulesType.energy_on_hit(action_name))
+	defender.energy = minf(100.0, defender.energy + 8.0)
+	defender.flash_hit()
+	defender.set_action("hit", 0.23)
+	var away := signf(defender.position.x - attacker.position.x)
+	if away == 0.0:
+		away = -1.0 if slot == 1 else 1.0
+	var force := 155.0 if action_name == "punch" else (245.0 if action_name == "kick" else 375.0)
+	if defender.blocking:
+		force *= 0.32
+	_knockback_speeds[1 if defender == _actor_two else 0] += away * force
+	_spawn_sparks(defender.global_position + Vector2(0, -190), Color(str(defender.fighter.color)), 11 if action_name != "special" else 28)
+	if defender.health <= 0:
+		defender.set_action("defeat", 1.2)
+
+
+func _spawn_sparks(position: Vector2, color: Color, count: int) -> void:
+	for index: int in count:
+		var angle := _rng.randf_range(-PI, PI)
+		var speed := _rng.randf_range(45.0, 240.0)
+		_fx_particles.append({
+			"position":position,
+			"velocity":Vector2(cos(angle), sin(angle)) * speed,
+			"life":_rng.randf_range(0.18, 0.55),
+			"max_life":0.55,
+			"radius":_rng.randf_range(2.0, 8.0),
+			"tint":color
+		})
+	if is_instance_valid(_fx_layer):
+		_fx_layer.queue_redraw()
+
+
+func _resolve_round(winner: int) -> void:
+	if _phase != "fight":
+		return
+	if _mode == "practice":
+		var dummy := _actor_two
+		dummy.health = FightRulesType.STARTING_HEALTH
+		dummy.energy = 0.0
+		_actor_one.health = FightRulesType.STARTING_HEALTH
+		_actor_one.energy = 0.0
+		_set_dialogue("PRACTICE HIT — dummy reset. Keep testing!", _actor_one.fighter, 1.6, false)
+		return
+	_phase = "round_result"
+	_between_round_timer = 2.1
+	if winner >= 0:
+		_round_wins[winner] += 1
+		var champ := _actor_one if winner == 0 else _actor_two
+		champ.set_action("victory", 1.0)
+		var outcome := "ROUND %d — %s TAKES IT!" % [_round_number, champ.fighter.name.to_upper()]
+		_set_dialogue(outcome, champ.fighter, 2.0, false)
+		_play_sound("game.victory" if winner == 0 else "game.defeat")
+	else:
+		_set_dialogue("ROUND DRAW! Reset and go again.", _actor_one.fighter, 1.8, false)
+	_refresh_hud()
+
+
+func _finish_match() -> void:
+	_match_winner = 0 if _round_wins[0] >= FightRulesType.rounds_needed_to_win() else 1
+	_phase = "finished"
+	var winner_actor := _actor_one if _match_winner == 0 else _actor_two
+	var loser_actor := _actor_two if _match_winner == 0 else _actor_one
+	winner_actor.set_action("victory", 100.0)
+	loser_actor.set_action("defeat", 100.0)
+	var record := {"winner":str(winner_actor.fighter.name), "loser":str(loser_actor.fighter.name), "score":"%d — %d" % [_round_wins[0], _round_wins[1]], "mode":_mode, "difficulty":_difficulty}
+	_session_results.append(record)
+	_play_sound("game.victory" if _match_winner == 0 else "game.defeat")
+	_show_results(record)
+
+
+func _show_results(record: Dictionary) -> void:
+	_background.texture = TITLE_ART
+	_wash.color = Color(0.025, 0.015, 0.065, 0.78)
+	var page := _new_page("results")
+	var winner := _actor_one if _match_winner == 0 else _actor_two
+	var loser := _actor_two if _match_winner == 0 else _actor_one
+	var outcome_badge := "PLAYER 1 VICTORY" if _match_winner == 0 else "PLAYER 1 DEFEAT"
+	if _mode == "local":
+		outcome_badge = "PLAYER 1 WINS  •  PLAYER 2 DEFEATED" if _match_winner == 0 else "PLAYER 2 WINS  •  PLAYER 1 DEFEATED"
+	_add_label(page, outcome_badge, 18, Color("ffdb78"), Rect2(0.11, 0.075, 0.89, 0.14), "eyebrow", true)
+	_add_label(page, str(record.winner).to_upper(), 54, Color("43e9ff") if _match_winner == 0 else Color("ff4eb5"), Rect2(0.13, 0.14, 0.87, 0.25), "title", true)
+	_add_label(page, "%s defeats %s" % [winner.fighter.signature, loser.fighter.name], 16, Color("e8dff4"), Rect2(0.18, 0.25, 0.82, 0.31), "heading", true)
+	_add_label(page, str(record.score), 33, Color("f8f4ff"), Rect2(0.34, 0.32, 0.66, 0.40), "title", true)
+	_add_label(page, "BEST OF 3 COMPLETE  •  SESSION BOUTS: %d" % _session_results.size(), 12, Color("c7b9d4"), Rect2(0.25, 0.405, 0.75, 0.455), "eyebrow", true)
+	var victorious := _pick_quip(winner.fighter, "win")
+	var defeated := _pick_quip(loser.fighter, "loss")
+	_add_label(page, "%s\n%s" % [victorious, defeated], 15, Color("ece0fa"), Rect2(0.20, 0.46, 0.80, 0.54), "heading", true)
+	_set_dialogue(victorious, winner.fighter, 1.9, true)
+	_make_button(page, "REMATCH", Rect2(0.22, 0.55, 0.48, 0.64), Callable(self, "_rematch"), true, Color("43e9ff"))
+	_make_button(page, "CHANGE FIGHTERS", Rect2(0.52, 0.55, 0.78, 0.64), Callable(self, "_show_selection"), false, Color("ff4eb5"))
+	_make_button(page, "MAIN MENU", Rect2(0.36, 0.68, 0.64, 0.77), Callable(self, "_return_to_menu"), false, Color("b68aff"))
+	_add_label(page, "Ayyayyo, debba padindhi!  •  Friendship cancelled ra!  •  Pass avvadam kuda oka art ra!", 12, Color("cfc3df"), Rect2(0.12, 0.83, 0.88, 0.91), "heading", true)
+	_add_label(page, "No scores or photos were saved.", 11, Color("a59ab4"), Rect2(0.35, 0.93, 0.65, 0.97), "eyebrow", true)
+
+
+func _rematch() -> void:
+	_start_match()
+
+
+func _return_to_menu() -> void:
+	get_tree().paused = false
+	_actor_layer.visible = false
+	_show_menu()
+
+
+func _refresh_hud() -> void:
+	if is_instance_valid(_hud_health_one):
+		_hud_health_one.value = _actor_one.health
+		_hud_health_two.value = _actor_two.health
+		_hud_energy_one.value = _actor_one.energy
+		_hud_energy_two.value = _actor_two.energy
+	if is_instance_valid(_hud_timer):
+		_hud_timer.text = "∞" if _mode == "practice" else "%02d" % maxi(0, ceili(_round_timer))
+	if is_instance_valid(_hud_round):
+		_hud_round.text = "ROUND %d  •  %d — %d" % [_round_number, _round_wins[0], _round_wins[1]]
 
 
 func _toggle_pause() -> void:
-	if _screen != "game" or _world == null:
+	if _screen != "arena" or _phase in ["finished", "paused"]:
 		return
-	var opening := not _pause_screen.visible
-	_pause_screen.visible = opening
-	_world.set_simulation_active(not opening)
-	_world.set_input_enabled(not opening)
-	AudioDirector.set_game_paused(opening)
-	_set_input_method(_input_method)
-	if opening:
-		_resume_button.grab_focus()
+	_phase = "paused"
+	AudioDirector.set_game_paused(true)
+	var page := _new_page("pause")
+	_page.process_mode = Node.PROCESS_MODE_ALWAYS
+	_page.mouse_filter = Control.MOUSE_FILTER_STOP
+	var veil := ColorRect.new()
+	veil.color = Color(0.012, 0.008, 0.035, 0.78)
+	veil.mouse_filter = Control.MOUSE_FILTER_STOP
+	ScreenFactory.full_rect(veil)
+	page.add_child(veil)
+	var panel := _new_panel(page, Rect2(0.26, 0.22, 0.74, 0.80), Color("b68aff"))
+	_add_label(panel, "MATCH PAUSED", 31, Color("f8f4ff"), Rect2(0.06, 0.09, 0.94, 0.24), "title", true)
+	_add_label(panel, "Take a breath. Attendance is still pending.", 14, Color("cfc3df"), Rect2(0.08, 0.28, 0.92, 0.38), "heading", true)
+	_make_button(panel, "RESUME FIGHT", Rect2(0.16, 0.47, 0.84, 0.59), Callable(self, "_resume_match"), true)
+	_make_button(panel, "RESTART MATCH", Rect2(0.16, 0.62, 0.84, 0.73), Callable(self, "_restart_match"), false, Color("ff4eb5"))
+	_make_button(panel, "EXIT TO MENU", Rect2(0.16, 0.76, 0.84, 0.87), Callable(self, "_return_to_menu"), false, Color("43e9ff"))
 
 
-func _request_destructive_action(action: String) -> void:
-	if action not in ["restart", "title"] or _screen != "game":
-		return
-	_pending_destructive_action = action
-	_confirm_title.text = I18n.t("confirm.heading")
-	_confirm_message.text = I18n.t("confirm.%s" % action)
-	_confirm_accept_button.text = I18n.t("confirm.accept")
-	_confirm_cancel_button.text = I18n.t("confirm.cancel")
-	_confirm_screen.visible = true
-	_confirm_accept_button.grab_focus()
+func _resume_match() -> void:
+	get_tree().paused = false
+	_phase = "fight"
+	AudioDirector.set_game_paused(false)
+	_build_arena_hud()
+	_refresh_hud()
 
 
-func _confirm_destructive_action() -> void:
-	var action := _pending_destructive_action
-	_pending_destructive_action = ""
-	_confirm_screen.visible = false
-	if action == "restart":
-		_restart_stage()
-	elif action == "title":
-		_show_title()
+func _restart_match() -> void:
+	get_tree().paused = false
+	_start_match()
 
 
-func _cancel_destructive_action() -> void:
-	_pending_destructive_action = ""
-	_confirm_screen.visible = false
-	if _pause_screen.visible:
-		_resume_button.grab_focus()
+func _show_dialogue(kind: String, fighter: Dictionary, duration: float = 1.6, voice: bool = true) -> void:
+	_set_dialogue(_pick_quip(fighter, kind), fighter, duration, voice)
 
 
-func _sync_world_actor_visibility() -> void:
-	if _world == null:
-		return
-	var actors_obscured := (
-		_pause_screen.visible
-		or _confirm_screen.visible
-		or _result_screen.visible
-		or _leaderboard_screen.visible
-		or _stage_banner.visible
-	)
-	_world.set_actors_visible(_screen == "game" and not actors_obscured)
-
-
-func _arm_tutorial() -> void:
-	_force_tutorial = true
-	SaveStore.set_tutorial_completed(false)
-	_title_status.text = I18n.text("tutorial.replay_armed")
-
-
-func _begin_tutorial() -> void:
-	_skip_tutorial_button.visible = true
-	_tutorial_state = 0
-	_world.set_simulation_active(false)
-	_world.set_input_enabled(false)
-	_tutorial.show_callout(I18n.t("tutorial.move.title"), I18n.t("tutorial.move"), _tutorial_input_hint(), _world.get_runner_screen_position())
-	_set_input_method(_input_method)
-
-
-func _skip_tutorial() -> void:
-	_tutorial_state = -1
-	_force_tutorial = false
-	_tutorial.visible = false
-	_skip_tutorial_button.visible = false
-	SaveStore.set_tutorial_completed(true, SaveStore.TUTORIAL_VERSION)
-	if _world != null and _screen == "game":
-		_world.set_simulation_active(not _pause_screen.visible)
-		_world.set_input_enabled(not _pause_screen.visible)
-	_set_input_method(_input_method)
-	_pause_button.grab_focus()
-
-
-func _on_tutorial_continued() -> void:
-	if _world == null:
-		return
-	match _tutorial_state:
-		0:
-			_tutorial_state = 1
-			_world.set_simulation_active(true)
-			_world.set_input_enabled(true)
-		2:
-			_tutorial_state = 3
-			_world.set_simulation_active(true)
-			_world.set_input_enabled(true)
-		4:
-			_skip_tutorial_button.visible = false
-			_tutorial_state = -1
-			_force_tutorial = false
-			SaveStore.set_tutorial_completed(true, SaveStore.TUTORIAL_VERSION)
-			_world.set_simulation_active(true)
-			_world.set_input_enabled(true)
-
-
-func _on_tutorial_player_moved() -> void:
-	if _tutorial_state != 1 or _world == null:
-		return
-	_tutorial_state = 2
-	_world.set_simulation_active(false)
-	_world.set_input_enabled(false)
-	_tutorial.show_callout(I18n.t("tutorial.collect.title"), I18n.t("tutorial.collect"), I18n.t("tutorial.input.collect"), _world.get_runner_screen_position())
-
-
-func _on_tutorial_pellet_collected() -> void:
-	if _tutorial_state != 3 or _world == null:
-		return
-	_tutorial_state = 4
-	_world.set_simulation_active(false)
-	_world.set_input_enabled(false)
-	_tutorial.show_callout(I18n.t("tutorial.power.title"), I18n.t("tutorial.power"), I18n.t("tutorial.input.pause"), _world.get_runner_screen_position())
-
-
-func _tutorial_input_hint() -> String:
-	return I18n.t("tutorial.input.%s" % _input_method)
-
-
-func _on_stats_changed(updated_score: int, updated_lives: int) -> void:
-	_run_score = updated_score
-	_run_lives = updated_lives
-	for stat: Array in [
-		[_score_caption, _score_label, "hud.score", "score", str(updated_score)],
-		[_stage_caption, _stage_label, "hud.stage", "stage", str(_stage_index + 1)],
-		[_lives_caption, _lives_label, "hud.lives", "lives", str(updated_lives)],
-	]:
-		var parts := _stat_parts(stat[2], stat[3], stat[4])
-		(stat[0] as Label).text = parts[0].to_upper()
-		(stat[1] as Label).text = parts[1]
-	if _shown_score >= 0 and updated_score > _shown_score:
-		_punch(_score_label, Color("cfe6ff"))
-	if _shown_lives >= 0 and updated_lives != _shown_lives:
-		_punch(_lives_label, Color(2.0, 0.8, 0.8))
-	_shown_score = updated_score
-	_shown_lives = updated_lives
-	_stage_pips.queue_redraw()
-
-
-func _on_effects_changed(active_effects: Dictionary) -> void:
-	var summaries := PackedStringArray()
-	for effect: String in ["overdrive", "shield", "slow_field", "magnet"]:
-		var seconds := float(active_effects.get(effect, 0.0))
-		if seconds > 0.0:
-			summaries.append(I18n.text("hud." + effect, {"seconds": "%.1f" % seconds}))
-	_power_label.text = I18n.text("hud.ready") if summaries.is_empty() else "  ·  ".join(summaries)
-
-
-func _layout_world() -> void:
-	_apply_responsive_layout()
-	if _world == null or not is_instance_valid(_world):
-		return
-	var pixel_size := _world.get_pixel_size()
-	var portrait := size.y > size.x * 1.15
-	var top := maxf(130.0, _hud_panel.get_rect().end.y + 22.0)
-	var bottom := 335.0 if portrait else 40.0
-	var available := Vector2(maxf(200.0, size.x - 80.0), maxf(200.0, size.y - top - bottom))
-	var zoom := float(TuningStore.get_value("environment.camera.zoom", 1.0))
-	var scale_cap := 1.65 if portrait else 1.12
-	var scale_factor := minf(minf(available.x / pixel_size.x, available.y / pixel_size.y), scale_cap * zoom)
-	_world.scale = Vector2.ONE * scale_factor
-	var scaled_size := pixel_size * scale_factor
-	_world.position = Vector2((size.x - scaled_size.x) * 0.5, top + (available.y - scaled_size.y) * 0.5)
-	_arena_frame.set_arena(Rect2(_world.position, scaled_size))
-
-
-func _apply_responsive_layout() -> void:
-	if _title_panel == null or _skip_tutorial_button == null:
-		return
-	var portrait := size.y > size.x * 1.15
-	var menu_scale := 1.65 if portrait else 1.0
-	_layout_title(portrait, menu_scale)
-	_fit_centered(_title_frame, Vector2(672.0, 750.0), menu_scale)
-	_fit_centered(_pause_panel, Vector2(460.0, 420.0), menu_scale)
-	_fit_centered(_pause_frame, Vector2(580.0, 540.0), menu_scale)
-	_fit_centered(_result_panel, Vector2(580.0, 610.0), menu_scale)
-	_fit_centered(_confirm_panel, Vector2(520.0, 300.0), menu_scale)
-	_fit_centered(_leaderboard_panel, Vector2(700.0, 620.0), menu_scale)
-	_hud_panel.offset_bottom = 124.0 if portrait else 92.0
-	for label: Label in [_score_label, _stage_label, _lives_label]:
-		label.add_theme_font_size_override("font_size", 40 if portrait else 26)
-	for chip: PanelContainer in _hud_chips:
-		var icon := chip.find_child("Icon", true, false) as Control
-		if icon != null:
-			icon.custom_minimum_size = Vector2.ONE * (44.0 if portrait else 28.0)
-	_stage_pips.custom_minimum_size = Vector2(52.0, 36.0) if portrait else Vector2(34.0, 26.0)
-	_pause_button.add_theme_constant_override("icon_max_width", 28 if portrait else 18)
-	for label: Label in [_score_caption, _stage_caption, _lives_caption]:
-		label.add_theme_font_size_override("font_size", 17 if portrait else 11)
-	_power_label.add_theme_font_size_override("font_size", 24 if portrait else 14)
-	_power_label.visible = true
-	_pause_button.add_theme_font_size_override("font_size", 27 if portrait else 17)
-	_pause_button.custom_minimum_size = Vector2(160.0, 72.0) if portrait else Vector2(104.0, 40.0)
-	_touch_controls.scale = Vector2.ONE * (1.5 if portrait else 1.0)
-	_touch_controls.position = Vector2(30.0, size.y - 290.0) if portrait else Vector2(20.0, size.y - 198.0)
-	_skip_tutorial_button.custom_minimum_size = Vector2(260.0, 80.0) if portrait else Vector2(170.0, 46.0)
-	_skip_tutorial_button.add_theme_font_size_override("font_size", 24 if portrait else 15)
-	_skip_tutorial_button.position = Vector2(size.x - (290.0 if portrait else 205.0), size.y - (185.0 if portrait else 125.0))
-
-
-func _fit_centered(control: Control, design_size: Vector2, maximum_scale: float) -> void:
-	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	control.size = design_size.max(control.get_combined_minimum_size())
-	var fit := minf(maximum_scale, minf((size.x - 48.0) / control.size.x, (size.y - 60.0) / control.size.y))
-	control.pivot_offset = control.size * 0.5
-	control.scale = Vector2.ONE * fit
-	control.set_meta("fit_scale", control.scale)
-	control.position = (size - control.size) * 0.5
-
-
-func _apply_filter_settings() -> void:
-	if _filter == null:
-		return
-	_filter.visible = bool(TuningStore.get_value("environment.filter.enabled", true))
-	_filter_material.set_shader_parameter("strength", float(TuningStore.get_value("environment.filter.intensity", 0.18)))
-	if _hud != null:
-		_hud.modulate.a = float(TuningStore.get_value("ui.hud.opacity", 0.94))
-
-
-func _on_tuning_value_changed(key: String, _requested: Variant, _active: Variant) -> void:
-	if key in ["environment.filter.enabled", "environment.filter.intensity", "ui.hud.opacity"]:
-		_apply_filter_settings()
-	if key == "environment.camera.zoom":
-		_layout_world()
-
-
-func _on_locale_changed(_locale: String) -> void:
-	_refresh_texts()
-	if _screen == "leaderboard":
-		_refresh_leaderboard_rows()
-
-
-func _refresh_texts() -> void:
-	_title_label.text = I18n.text("app.title")
-	_subtitle_label.text = I18n.text("app.subtitle")
-	_tagline_label.text = I18n.text("app.tagline")
-	_play_button.text = I18n.text("menu.play")
-	_licenses_button.text = I18n.text("ui.open_source_licenses")
-	_skip_tutorial_button.text = I18n.t("tutorial.skip")
-	_leaderboard_button.text = I18n.text("menu.leaderboard")
-	_language_button.text = I18n.text("menu.language")
-	_tutorial_button.text = I18n.text("menu.tutorial_replay")
-	_pause_button.text = I18n.text("hud.pause")
-	_pause_title.text = I18n.text("pause.title")
-	_resume_button.text = I18n.text("pause.resume")
-	_restart_button.text = I18n.text("pause.restart")
-	_pause_title_button.text = I18n.text("pause.main_menu")
-	_confirm_title.text = I18n.t("confirm.heading")
-	_confirm_accept_button.text = I18n.t("confirm.accept")
-	_confirm_cancel_button.text = I18n.t("confirm.cancel")
-	if not _pending_destructive_action.is_empty():
-		_confirm_message.text = I18n.t("confirm.%s" % _pending_destructive_action)
-	_result_name_label.text = I18n.text("result.name").to_upper()
-	_name_input.placeholder_text = I18n.text("result.name_placeholder")
-	_submit_button.text = I18n.text("result.submit")
-	_play_again_button.text = I18n.text("result.play_again")
-	_result_title_button.text = I18n.text("result.main_menu")
-	for node: Node in _result_screen.find_children("*", "Button", true, false):
-		if node.has_meta("locale_key"):
-			(node as Button).text = I18n.text(str(node.get_meta("locale_key")))
-	_leaderboard_title.text = I18n.text("leaderboard.title")
-	_leaderboard_back_button.text = I18n.text("leaderboard.back")
-	if _screen == "result":
-		_refresh_result_texts()
-	if _world != null:
-		_on_stats_changed(_run_score, _run_lives)
-		_on_effects_changed(_world.get_active_effects())
-	_refresh_game_ui_texts()
-
-
-## Menu items read as game menus (Latin caps; CJK unaffected); key prompts follow the locale.
-func _refresh_game_ui_texts() -> void:
-	for menu: VBoxContainer in [_title_menu, _pause_menu]:
-		for node: Node in menu.get_children():
-			if node is Button:
-				(node as Button).text = (node as Button).text.to_upper()
-	for node: Node in find_children("*", "HBoxContainer", true, false):
-		if node.has_meta("locale_key") and node.has_node("Action"):
-			(node.get_node("Action") as Label).text = I18n.text(str(node.get_meta("locale_key")))
-
-
-func _refresh_result_texts() -> void:
-	_result_title.text = I18n.text("result.victory" if _run_completed else "result.game_over")
-	var score_parts := _stat_parts("result.score", "score", str(roundi(float(_run_score) * _result_reveal)))
-	_result_score_caption.text = score_parts[0].to_upper()
-	_result_score.text = score_parts[1]
-	_result_time.text = I18n.text("result.time", {"time": "%.1f" % _run_elapsed})
-	_result_name_label.text = I18n.text("result.name").to_upper()
-	_name_input.placeholder_text = I18n.text("result.name_placeholder")
-	_submit_button.text = I18n.text("result.submit")
-	_play_again_button.text = I18n.text("result.play_again")
-	_result_title_button.text = I18n.text("result.main_menu")
-	if _score_saved:
-		_result_status.text = I18n.t("result.saved_local")
-	elif not _run_result.is_empty() and not bool(_run_result.get("ranked_eligible", false)):
-		_result_status.text = I18n.t("result.unranked", {"marker": str(_run_result.get("configuration_marker", ""))})
-
-
-func _clear_world() -> void:
-	if _world != null and is_instance_valid(_world):
-		_world.queue_free()
-	_world = null
+func _on_custom_dialogue_for_special(fighter_id: String) -> String:
+	return str(_custom_dialogue.get(fighter_id, ""))

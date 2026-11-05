@@ -11,6 +11,10 @@ const CUES := {
 	"music.gameplay": {"path": "", "kind": "music"},
 	"ui.confirm": {"path": "", "bus": "UI"},
 	"ui.cancel": {"path": "", "bus": "UI"},
+	"fight.punch": {"path": "", "bus": "SFX"},
+	"fight.kick": {"path": "", "bus": "SFX"},
+	"fight.jump": {"path": "", "bus": "SFX"},
+	"fight.special": {"path": "", "bus": "SFX"},
 	"player.action": {"path": "", "bus": "SFX"},
 	"enemy.impact": {"path": "", "bus": "SFX"},
 	"score.reward": {"path": "", "bus": "SFX"},
@@ -236,11 +240,33 @@ func _load_streams() -> void:
 
 
 func _ensure_buses() -> void:
-	for bus_name: String in ["Music", "SFX", "UI"]:
-		if AudioServer.get_bus_index(bus_name) >= 0:
-			continue
+	_ensure_bus("MusicBase", "Master", linear_to_db(3.0))
+	_ensure_bus("SfxBase", "Master", linear_to_db(2.0))
+	_ensure_bus("Music", "MusicBase")
+	_ensure_bus("SFX", "SfxBase")
+	_ensure_bus("UI", "SfxBase")
+
+
+func _ensure_bus(bus_name: String, send_to: String, base_gain_db: float = 0.0) -> void:
+	var index := AudioServer.get_bus_index(bus_name)
+	if index < 0:
 		AudioServer.add_bus()
-		AudioServer.set_bus_name(AudioServer.bus_count - 1, bus_name)
+		index = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(index, bus_name)
+	AudioServer.set_bus_send(index, send_to)
+	if base_gain_db <= 0.0:
+		return
+	var amplifier: AudioEffectAmplify
+	for effect_index: int in AudioServer.get_bus_effect_count(index):
+		var effect := AudioServer.get_bus_effect(index, effect_index)
+		if effect is AudioEffectAmplify:
+			amplifier = effect as AudioEffectAmplify
+			break
+	if amplifier == null:
+		amplifier = AudioEffectAmplify.new()
+		AudioServer.add_bus_effect(index, amplifier)
+	# One explicit base gain: never stack a new boost on an existing base stage.
+	amplifier.volume_db = base_gain_db
 
 
 func _apply_bus_settings() -> void:
@@ -254,9 +280,10 @@ func _apply_bus_settings() -> void:
 		var index := AudioServer.get_bus_index(bus_name)
 		if index >= 0:
 			var duck := 8.0 if bus_name == "Music" and _paused else 0.0
-			AudioServer.set_bus_volume_db(index, float(TuningStore.get_value(mappings[bus_name], 0.0)) - duck)
+			AudioServer.set_bus_volume_db(index, minf(float(TuningStore.get_value(mappings[bus_name], 0.0)) - duck, 0.0))
 	var master := AudioServer.get_bus_index("Master")
 	if master >= 0:
+		AudioServer.set_bus_volume_db(master, minf(float(TuningStore.get_value("audio.master.volume_db", 0.0)), 0.0))
 		AudioServer.set_bus_mute(master, bool(TuningStore.get_value("audio.master.muted", false)))
 
 

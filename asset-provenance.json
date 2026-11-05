@@ -1,33 +1,887 @@
 {
   "assets": {
+    "assets/game/arena_background.jpg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:2afa7b767668e20e7e9157bc9a7b0e45c9d519eeafe51a02759bd2e406a8f422",
+      "shipped": true,
+      "size": 308185,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/arena_background.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:5ac2c72bd90f5efa8729a079d8ad02266177677a695037e82ee8b5aa077c8d80",
+      "shipped": false,
+      "size": 4151550,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/game/audio/arcade_theme.mp3": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:7d23c1359546b64203f3efb80ef8e314ea0fab9d4306119f0040ab185633c4cb",
+      "shipped": false,
+      "size": 1830517,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/game/audio/arcade_theme.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:100b2ccc88aacf69f88895c64cb9c503e4dbda06f5c631d06ece6031fb7a6559",
+      "shipped": true,
+      "size": 532963,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/defeat.mp3": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:257340fe8fb639459d54cf15dc3edc22db6c5a40f7788c1f799d172d265c3fa1",
+      "shipped": true,
+      "size": 15089,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/jump.mp3": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:81151cd0601e8586f849dc6ea5047ae5e93d5d5864479de095e543ee6f46d9a7",
+      "shipped": true,
+      "size": 8820,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/kick.mp3": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:509c5e8f517187d890bc426f17e6b6bd1b412655e35ee8426b65f8e25c117c1d",
+      "shipped": true,
+      "size": 8820,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/punch.mp3": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:56b8b1fb044e2464d8598c9fe909a0f619c113625ba8cccc9d466e1130708902",
+      "shipped": true,
+      "size": 8820,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_01.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:cc035dcbba21c19ba0856673552fadd5357c645d8c0726818b72fe0332743e50",
+      "shipped": true,
+      "size": 6986,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_02.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:098d1b3d8a4910120d53536a6df030a2821acdf7abe6b992a66a8c1ff3244b83",
+      "shipped": true,
+      "size": 12847,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_03.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:46e7edd88da986d924a5549554dd2954f97fe27b76d7b75bce9a76303610f60b",
+      "shipped": true,
+      "size": 15282,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_04.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:562499d34e4fdcdb6745cd1fe9cdd2723bc245bf1879af132032ab5c40fa8423",
+      "shipped": true,
+      "size": 10043,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_05.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:ef3180da0f737a5fb6c18eb93f9024a41c34ad671ba8b63d4d2c6c02e5a1f4e9",
+      "shipped": true,
+      "size": 15767,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_06.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:40c09eed99eb0eea2ec41e1eb11e4d85dab0ee39b8425e165eee47ef1e0d33dc",
+      "shipped": true,
+      "size": 11272,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_07.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:cc3074479fab1217c1977f7fd66fd905f00a4135707aa6184bf8092c5ded368e",
+      "shipped": true,
+      "size": 12302,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/quips/quip_08.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:60155762827121dae69e4d3d7c92a1615935b5c9bc44557c82e6dcf65f8e4105",
+      "shipped": true,
+      "size": 13550,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/special.mp3": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:d124d70f669c2a1bf4bd408db9c08d48f9eb9c6966f637e6ec51206f722d4065",
+      "shipped": true,
+      "size": 14671,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/audio/telugu_quips.ogg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:dec746eff6743516f6e3cfd3a348b6687b02f4c190a9b15c5e117ec348eb6f30",
+      "shipped": false,
+      "size": 96798,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/game/audio/telugu_quips.wav": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:5707000aab324c32ec5d261fb1b3f47465572db56914ea1215442e9d92f70489",
+      "shipped": false,
+      "size": 771868,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/game/audio/victory.mp3": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:8101a834f5f81f611d5086e410c5f57bbaa1fe51abd24a46c049def6a4e2a859",
+      "shipped": true,
+      "size": 18433,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/arabian_horse.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:60aa04003ec0c025f434447a455622ee6cd2f25f7b293554abcd0b428413f975",
+      "shipped": true,
+      "size": 209273,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_01.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:4a7beacdf854f2a60ae0acea1f456a4c342f04bf15c991e7dcbf7008f2459881",
+      "shipped": true,
+      "size": 120975,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_02.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:74210ba1d81e30e9bb8a409b1758a5af366c50020ac113c28f745f3e383ddcf1",
+      "shipped": true,
+      "size": 144818,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_03.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:8d4efa4f4d28308a0d52820aa7b917bb7498086bece2f4e2e55aa3b2c9ca9378",
+      "shipped": true,
+      "size": 144521,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_04.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:9c48863cc22e4ca040a81f96bf72d7104ca8e328b98633420416220cb2715785",
+      "shipped": true,
+      "size": 133235,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_05.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:9d57096811f6c1e745f865d5d6b8c39709433d1a4fd9ef558bfeaf4b5df67e1c",
+      "shipped": true,
+      "size": 142710,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_06.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:b74eeeb3ab391cd02870ee434790dab5d31e8976a9fb8f5c4f43a38a9ca0c121",
+      "shipped": true,
+      "size": 132672,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_07.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:712515e9ff9c11de982f2759e45c4ecc4a6febfc0d5d1ca215ff36a9de95055e",
+      "shipped": true,
+      "size": 102967,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_08.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:0c3f3351be2d191ffcabfabaadb54f7dff8bc5b488bbf9e7740289455e590a80",
+      "shipped": true,
+      "size": 149086,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_09.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:c93e4a10d6a679ad9812166752ed600fe42434f4dd5c83086e8c453511617924",
+      "shipped": true,
+      "size": 195293,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_10.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:01a249889111f2b7012da982e1739b89ae61310fed80c98615841d3c57b4f2f7",
+      "shipped": true,
+      "size": 151319,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_11.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:2d98a2df3bf1e44d95821770ae4a50603d3d2e5669fcfc749a5e76810f8f0c59",
+      "shipped": true,
+      "size": 152919,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_12.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:5e6adaf275f71143332fa1fdc70c6070e4c41db035e90cde81053aba17de72ae",
+      "shipped": true,
+      "size": 154830,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/game/fighter_roster.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/characters/fighter_roster_atlas.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:e473eb3473a2f6450f26270971703f70a54cc42d8bad6c31a424e3c8c74ab7fb",
+      "shipped": false,
+      "size": 4709797,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/game/characters/masters/arabian_horse_master.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:51cf1b2014ea23f08d32cf21db93581166e2449303bbf319dc71e5c8dd815ab7",
+      "shipped": false,
+      "size": 2969800,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/game/title_illustration.jpg": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "scripts/main.gd"
+      ],
+      "regions": [],
+      "sha256": "sha256:aa04658739538340c6473e7b5ebc0e2945e5c5bcb47bc44024c6fed4acfa7cc4",
+      "shipped": true,
+      "size": 390400,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "scripts/main.gd"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/game/title_illustration.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:c22bcdd8aa3f8ace2e5f56018f092be3add2c4995be34a4ddc6be4fee7f1af5f",
+      "shipped": false,
+      "size": 5263811,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/share/favicon-small.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "game-sharing.json",
+        "project.godot"
+      ],
+      "regions": [],
+      "sha256": "sha256:870d2e3d95e54a02965315c90c771b35964ee150d0292c2c66b4e7eefe2c6c85",
+      "shipped": true,
+      "size": 6776,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "game-sharing.json",
+        "project.godot"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/share/favicon.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:db72bb8e7c2f28393995fe896460be22f367814c3765ae33d8bbf175ec84368f",
+      "shipped": false,
+      "size": 2408843,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
+    "assets/share/og-cover.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [
+        "game-sharing.json"
+      ],
+      "regions": [],
+      "sha256": "sha256:e3bd94706ef7f142783ca1d98fc2c054ab2f4c3852291157c4b1c00e6cbbf58b",
+      "shipped": true,
+      "size": 1323144,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [
+        "game-sharing.json"
+      ],
+      "used": true,
+      "usedBy": []
+    },
+    "assets/share/og.png": {
+      "declaredUseEvidence": [],
+      "generator": {},
+      "inputs": [],
+      "license": {},
+      "origin": "unknown",
+      "referenceEvidence": [],
+      "regions": [],
+      "sha256": "sha256:de42024f4ba567913c2e4b0d39692c5a4752a0fab484194457ed04b096feeeaf",
+      "shipped": false,
+      "size": 4880319,
+      "source": {},
+      "status": "present",
+      "transformations": [],
+      "useEvidence": [],
+      "used": false,
+      "usedBy": []
+    },
     "assets/template/characters/runner.png": {
       "declaredUseEvidence": [],
       "generator": {},
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "project.godot",
-        "scripts/entities/runner.gd",
-        "scripts/main.gd",
-        "scripts/ui/title_art.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:c88485773d6ff9361e036f37d8ac76fb77b8c3f7c041c3f52c8dd222adc8cc21",
-      "shipped": null,
+      "shipped": true,
       "size": 68885,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "project.godot",
-        "scripts/entities/runner.gd",
-        "scripts/main.gd",
-        "scripts/ui/title_art.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/characters/sentinel.png": {
@@ -36,24 +890,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/entities/sentinel.gd",
-        "scripts/ui/title_art.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:0d9fb751bca5507ba14f7090573e6605a94753390a9e7c53bf2f590f0a24918d",
-      "shipped": null,
+      "shipped": true,
       "size": 64998,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/entities/sentinel.gd",
-        "scripts/ui/title_art.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/environment/backdrop.png": {
@@ -62,22 +910,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/main.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:ec4ab7867e60fb483dd438459f587b478aac4c1e71ec4fe509ce74a18de34216",
-      "shipped": null,
+      "shipped": true,
       "size": 971282,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/main.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/environment/foreground.png": {
@@ -86,22 +930,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/main.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:4b6916024c69961fbfa7cdc929c68f547fea4561e61ebdb3405b3aba0efbd94d",
-      "shipped": null,
+      "shipped": true,
       "size": 58603,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/main.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/fonts/Figtree-VF.subset.woff2": {
@@ -117,12 +957,12 @@
       ],
       "regions": [],
       "sha256": "sha256:b3976c5969c8b1afd81dc3e314b61d8ffe3f3f58cf40906443105d330e6e0bdf",
-      "shipped": null,
+      "shipped": true,
       "size": 23660,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
       "useEvidence": [
         "assets/template/fonts/ui_bold.tres",
@@ -148,7 +988,7 @@
       ],
       "regions": [],
       "sha256": "sha256:38f4c5f927f746b3dfa4c3a5d7edf0b7a3e828e27438418fa54f9e1565289412",
-      "shipped": null,
+      "shipped": true,
       "size": 1869368,
       "source": {
         "name": "NotoSansSC-VF.subset.woff2",
@@ -178,12 +1018,12 @@
       ],
       "regions": [],
       "sha256": "sha256:438fbf4582548e76b266a738f2c11bcbd5137978f2d2e2f3aaabd49df69186f2",
-      "shipped": null,
+      "shipped": true,
       "size": 41696,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
       "useEvidence": [
         "assets/template/fonts/display/generic_eyebrow.tres",
@@ -200,26 +1040,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/game/maze_world.gd",
-        "scripts/main.gd",
-        "scripts/ui/title_art.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:ffd7906f240f928e785d7c19a9e7a7b5dfab0d7483be5205dda3e4ba17ebe06a",
-      "shipped": null,
+      "shipped": true,
       "size": 50950,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/game/maze_world.gd",
-        "scripts/main.gd",
-        "scripts/ui/title_art.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/powerups/magnet.png": {
@@ -228,22 +1060,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/game/maze_world.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:6e7354aa6510a462717218b09b9d784bb161b87878bff62ef4f2a9d03c053de7",
-      "shipped": null,
+      "shipped": true,
       "size": 53724,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/game/maze_world.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/powerups/overdrive.png": {
@@ -252,24 +1080,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/game/maze_world.gd",
-        "scripts/ui/title_art.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:6a48a85886c0551c1af0df576b0225f0ec3ae86b326fd84fc614083fbfe2908b",
-      "shipped": null,
+      "shipped": true,
       "size": 37238,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/game/maze_world.gd",
-        "scripts/ui/title_art.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/powerups/shield.png": {
@@ -278,24 +1100,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/game/maze_world.gd",
-        "scripts/ui/title_art.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:8cebf0cf730ca35c8c8697192ef78121c926442328a0725e0bd3e31701d64f13",
-      "shipped": null,
+      "shipped": true,
       "size": 39659,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/game/maze_world.gd",
-        "scripts/ui/title_art.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/powerups/slow_field.png": {
@@ -304,22 +1120,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/game/maze_world.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:96874c000866b2e7503b40da73888afb918ae36e462f51488415157da52a8637",
-      "shipped": null,
+      "shipped": true,
       "size": 49145,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/game/maze_world.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/ui/loading-background.png": {
@@ -328,22 +1140,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "project.godot"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:16dde3061f4e60802f8f0d1a6b875e72b6add05192237b03fef1fd313968a13a",
-      "shipped": null,
+      "shipped": true,
       "size": 473356,
       "source": {
         "starterId": "game-generic-v56"
       },
       "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "project.godot"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/ui/pause_glass.png": {
@@ -352,22 +1160,18 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/main.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:c88a4725838df85e72c7270865848f275b62c525c5679a2a8b7ecefb1af82d4b",
-      "shipped": null,
+      "shipped": true,
       "size": 115691,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/main.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     },
     "assets/template/ui/title_glass.png": {
@@ -376,99 +1180,146 @@
       "inputs": [],
       "license": {},
       "origin": "template",
-      "referenceEvidence": [
-        "scripts/main.gd"
-      ],
+      "referenceEvidence": [],
       "regions": [],
       "sha256": "sha256:8860db07768f093d4effea10b51431f76a1552d4bc7fd4e57757f189c51f0429",
-      "shipped": null,
+      "shipped": true,
       "size": 155592,
       "source": {
         "starterId": "game-generic-v56"
       },
-      "status": "awaiting-restoration",
+      "status": "present",
       "transformations": [],
-      "useEvidence": [
-        "scripts/main.gd"
-      ],
-      "used": true,
+      "useEvidence": [],
+      "used": false,
       "usedBy": []
     }
   },
   "discoveries": {},
   "downloads": {},
+  "export": {
+    "coverage": "verified",
+    "hostMedia": [
+      {
+        "contentMatches": [],
+        "path": "index.apple-touch-icon.png",
+        "sha256": "sha256:c885478ff1b2d95ee194848c51c701a0dbec00e1bb8b12c914e0a4b0141e7d47",
+        "size": 38080,
+        "sourcePaths": []
+      },
+      {
+        "contentMatches": [],
+        "path": "index.icon.png",
+        "sha256": "sha256:29c48f1d2e175d03216de9841fc59e2421df3741418688e0c8fb482635cc64ab",
+        "size": 7371,
+        "sourcePaths": []
+      },
+      {
+        "contentMatches": [],
+        "path": "index.png",
+        "sha256": "sha256:3cb4495c0b98dfbe4b663cbf2b6836473572339beb66d902367893162a70be0e",
+        "size": 21443,
+        "sourcePaths": []
+      },
+      {
+        "contentMatches": [],
+        "path": "share/870d2e3d95e54a02965315c90c771b35964ee150d0292c2c66b4e7eefe2c6c85.png",
+        "sha256": "sha256:870d2e3d95e54a02965315c90c771b35964ee150d0292c2c66b4e7eefe2c6c85",
+        "size": 6776,
+        "sourcePaths": [
+          "assets/share/favicon-small.png"
+        ]
+      },
+      {
+        "contentMatches": [],
+        "path": "share/e3bd94706ef7f142783ca1d98fc2c054ab2f4c3852291157c4b1c00e6cbbf58b.png",
+        "sha256": "sha256:e3bd94706ef7f142783ca1d98fc2c054ab2f4c3852291157c4b1c00e6cbbf58b",
+        "size": 1323144,
+        "sourcePaths": [
+          "assets/share/og-cover.png"
+        ]
+      }
+    ],
+    "pckSha256": "sha256:3be9bf8dcfcfc7ed061f3543a95bb5282c20e41a53f81450b7daf551d0a6aabc",
+    "profile": "release",
+    "sourceFingerprint": "sha256:489b046d118d9eacab036ba6b0001b4b8ad451d09581de0f64ca941c88e78689"
+  },
   "procedures": {},
   "summary": {
     "ancestry": {
       "ai": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       },
       "catalog": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       },
       "procedural": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       }
     },
     "derivatives": {
       "retained": 0,
-      "shipped": null,
+      "shipped": 0,
       "used": 0
     },
-    "exportedHostMedia": null,
+    "exportedHostMedia": {
+      "paths": 5,
+      "uniqueHashes": 5,
+      "unmatchedSourcePaths": 3
+    },
     "files": {
       "downloaded": 0,
-      "retained": 15,
-      "shipped": null,
-      "used": 15
+      "retained": 56,
+      "shipped": 47,
+      "used": 34
     },
     "origins": {
       "ai": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       },
       "catalog": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       },
       "derivative": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       },
       "external": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       },
       "procedural": {
         "retained": 0,
-        "shipped": null,
+        "shipped": 0,
         "used": 0
       },
       "template": {
         "retained": 15,
-        "shipped": null,
-        "used": 15
+        "shipped": 15,
+        "used": 3
       },
       "unknown": {
-        "retained": 0,
-        "shipped": null,
-        "used": 0
+        "retained": 41,
+        "shipped": 32,
+        "used": 31
       }
     },
     "packs": {
       "discovered": 0,
       "downloaded": 0,
-      "shipped": null,
+      "shipped": 0,
       "used": 0
     },
     "proceduralSystems": {
@@ -477,9 +1328,148 @@
     },
     "spriteRegions": {
       "retained": 0,
-      "shipped": null,
+      "shipped": 0,
       "used": 0
+    },
+    "visualCoverage": {
+      "approvedRevision": 3,
+      "blueprintId": "gbp_d87d65950d14933211392229",
+      "committedRoles": 8,
+      "expectedDigest": "5717fbf3951bb147febeb60455a73793b025d1d39b447da5041cdeb6b20808bc",
+      "fulfilledRoles": 0,
+      "roles": [
+        {
+          "id": "fighter_roster",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "id": "signature_attacks",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "id": "battle_arena",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "id": "combat_vfx",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "id": "fighter_cards",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "id": "fight_hud",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "id": "versus_flow",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "id": "menu_shell",
+          "reasons": [
+            "unresolved"
+          ],
+          "status": "unresolved"
+        }
+      ],
+      "search": {
+        "checkedPages": 0,
+        "outcomes": 0,
+        "overflowEvents": 0,
+        "requests": 0
+      },
+      "selectedButUnusedAssets": [],
+      "staleRenderedEvidence": [],
+      "status": "incomplete",
+      "unexplainedFallbacks": [],
+      "unresolvedRoles": [
+        "fighter_roster",
+        "signature_attacks",
+        "battle_arena",
+        "combat_vfx",
+        "fighter_cards",
+        "fight_hud",
+        "versus_flow",
+        "menu_shell"
+      ],
+      "visualQuality": "requires_agent_review"
     }
   },
-  "version": 1
+  "version": 1,
+  "visualCoverage": {
+    "attempts": {},
+    "expected": {
+      "approvedRevision": 3,
+      "blueprintId": "gbp_d87d65950d14933211392229",
+      "digest": "5717fbf3951bb147febeb60455a73793b025d1d39b447da5041cdeb6b20808bc",
+      "roles": [
+        {
+          "description": "Create your twelve distinct side-view cartoon fighters, keeping the eight CSM Gang characters exclusive to Player 1 and the four Opposite Gang characters exclusive to Player 2 or CPU. Each fighter needs exaggerated proportions, unique clothing and colors, a replaceable face-card area, and readable idle, walk, punch, kick, jump, block, hit, victory, defeat, and signature-special animation states.",
+          "id": "fighter_roster",
+          "label": "Complete 12-fighter roster"
+        },
+        {
+          "description": "Give each of your twelve fighters a visually distinct signature attack matching its recorded name, with readable anticipation, impact, and recovery while preserving the shared 25-damage gameplay rule.",
+          "id": "signature_attacks",
+          "label": "Character-specific special attacks"
+        },
+        {
+          "description": "Provide your combat stage with a readable side-view floor, collision boundaries, enough contrast for both teams, and a dark collegiate arcade atmosphere using restrained neon cyan, pink, and purple accents.",
+          "id": "battle_arena",
+          "label": "Side-view battle arena"
+        },
+        {
+          "description": "Cover your punches, kicks, blocks, jumps, knockback, hit reactions, low-health state, specials, victories, and defeats with lightweight 2D impact flashes, particles, motion accents, and clear feedback suitable for smooth 60 FPS play.",
+          "id": "combat_vfx",
+          "label": "Combat effects and hit feedback"
+        },
+        {
+          "description": "Create your roster and collection cards with team separation, recognizable fighter silhouettes, placeholder face areas, and framing that supports in-memory photo preview, crop, positioning, apply, replace, and removal without uploading or persisting personal images.",
+          "id": "fighter_cards",
+          "label": "Selection and customizable face cards"
+        },
+        {
+          "description": "Design your glowing health bars, special meters, round wins, 60-second timer, pause affordance, dialogue display, and responsive touch controls so they remain readable without obscuring the fighters.",
+          "id": "fight_hud",
+          "label": "Fight HUD and mobile controls"
+        },
+        {
+          "description": "Cover your arcade VS presentation, dramatic fight countdown, round transitions, victory and defeat presentation, results, restart, and rematch flow with smooth neon arcade motion.",
+          "id": "versus_flow",
+          "label": "VS screen, countdown, and match outcomes"
+        },
+        {
+          "description": "Provide your landing menu, character selection, mode and AI difficulty selection, customization, instructions, settings, pause, and collection screens in a cohesive polished arcade style rather than an admin-dashboard layout.",
+          "id": "menu_shell",
+          "label": "Arcade menus and mode selection"
+        }
+      ]
+    },
+    "overflowEvents": 0,
+    "resolutions": {},
+    "version": 1
+  }
 }
