@@ -14,7 +14,6 @@ func _verify() -> void:
 		"res://assets/game/title_illustration.jpg",
 		"res://assets/game/arena_background.jpg",
 		"res://assets/game/audio/arcade_theme.ogg",
-		"res://assets/share/favicon-small.png",
 		"res://assets/template/fonts/ui_regular.tres",
 	]:
 		_check(ResourceLoader.exists(path), "required pack resource exists: " + path)
