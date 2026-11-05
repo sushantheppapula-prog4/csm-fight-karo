@@ -28,14 +28,14 @@ func _verify() -> void:
 	_check(packed != null, "exported main scene loads")
 	if packed != null:
 		var main := packed.instantiate()
-			root.add_child(main)
-			await process_frame
-			await process_frame
-			_check(str(main.get("_screen")) == "menu", "pack boots directly to the custom game menu")
-			_check(str(main.get("_selected_p1")) in ["cr", "lady_don", "shiva_fighter", "fighter_51", "fighter_52", "fighter_53", "second_cr", "arabian_horse"], "Player 1 starts inside CSM Gang")
-			_check(str(main.get("_selected_p2")) in ["swapna_taker", "coa", "chubby_cheeks", "cheshma_girl"], "Player 2 starts inside Opposite Gang")
-			main.call("_start_match")
-			await process_frame
+		root.add_child(main)
+		await process_frame
+		await process_frame
+		_check(str(main.get("_screen")) == "menu", "pack boots directly to the custom game menu")
+		_check(str(main.get("_selected_p1")) in ["cr", "lady_don", "shiva_fighter", "fighter_51", "fighter_52", "fighter_53", "second_cr", "arabian_horse"], "Player 1 starts inside CSM Gang")
+		_check(str(main.get("_selected_p2")) in ["swapna_taker", "coa", "chubby_cheeks", "cheshma_girl"], "Player 2 starts inside Opposite Gang")
+		main.call("_start_match")
+		await process_frame
 		await process_frame
 		_check(str(main.get("_screen")) == "arena", "match launches to the custom arena")
 		_check(main.get("_actor_one") != null and main.get("_actor_two") != null, "both locally controlled fighter actors are created")
