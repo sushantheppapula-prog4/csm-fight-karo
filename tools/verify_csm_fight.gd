@@ -2,6 +2,16 @@ extends SceneTree
 
 const Roster = preload("res://scripts/game/fighter_roster.gd")
 const Rules = preload("res://scripts/game/fight_rules.gd")
+const QUIP_PATHS := [
+	"res://assets/game/audio/quips/quip_01.ogg",
+	"res://assets/game/audio/quips/quip_02.ogg",
+	"res://assets/game/audio/quips/quip_03.ogg",
+	"res://assets/game/audio/quips/quip_04.ogg",
+	"res://assets/game/audio/quips/quip_05.ogg",
+	"res://assets/game/audio/quips/quip_06.ogg",
+	"res://assets/game/audio/quips/quip_07.ogg",
+	"res://assets/game/audio/quips/quip_08.ogg",
+]
 
 var _failures: Array[String] = []
 var _checks := 0
@@ -31,8 +41,8 @@ func _verify() -> void:
 	_check(Rules.damage_after_block(25, true) < 25, "block reduces special damage")
 	for cue: String in ["arcade_theme.ogg", "punch.mp3", "kick.mp3", "jump.mp3", "special.mp3", "victory.mp3", "defeat.mp3"]:
 		_check(FileAccess.file_exists("res://assets/game/audio/" + cue), "original sound file exists: " + cue)
-	for index: int in range(1, 9):
-		_check(ResourceLoader.exists("res://assets/game/audio/quips/quip_%02d.ogg" % index), "event quip %d exists" % index)
+	for path: String in QUIP_PATHS:
+		_check(ResourceLoader.exists(path), "event voice clip exists: " + path.get_file())
 	var project := FileAccess.get_file_as_string("res://project.godot")
 	_check(not project.contains("SaveStore=\"*res://autoload/save_store.gd\""), "SaveStore persistence autoload removed")
 	_check(not project.contains("I18n=\"*res://autoload/i18n.gd\""), "unrequested saved locale autoload removed")
