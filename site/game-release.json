@@ -3,7 +3,7 @@
   "engineVersion": "4.7.2.stable.official.ed1daf0bf",
   "inputs": {
     "objectFormat": "sha1",
-    "tree": "c8c6078e06058df6e1e380f5517e938791e81489",
+    "tree": "fef5a34be37845141f7ca688948cd4e672749ad8",
     "entries": [
       {
         "path": ".gitignore",
@@ -27,13 +27,13 @@
         "path": "README.md",
         "type": "file",
         "mode": "100644",
-        "object": "38eeddfc8b6e473445c059b4511d3b7b6930c592"
+        "object": "ab8a428eaa266f7f218e3a4517d6af2eae1162d5"
       },
       {
         "path": "TODO.md",
         "type": "file",
         "mode": "100644",
-        "object": "e57f21d973ecfd526e985f2615f62f7d89f362d0"
+        "object": "efc3a0b9ce9044beb66e610909a4914a1fd824dc"
       },
       {
         "path": "assets.lock.json",
@@ -1332,7 +1332,7 @@
     ]
   },
   "build": {
-    "snapshotId": "sha256:2b2a8ea1f1e883a097d0a7930d40ee4dfaf1730843447577f40d8c151a00706a",
+    "snapshotId": "sha256:fefa7e1962b9a46955bb354bfa6f2d6989de7f4f4b51e05bbf697ec3de06475c",
     "toolchain": {
       "engineVersion": "4.7.2.stable.official.ed1daf0bf",
       "engineDigest": "sha256:8d106cbe6144c2dc7e881d61d2429c1a8a76e6b22ef48bd5e48dcf934953f71e",
@@ -1345,7 +1345,7 @@
     "profile": "release",
     "export": {
       "profile": "release",
-      "snapshotId": "sha256:2b2a8ea1f1e883a097d0a7930d40ee4dfaf1730843447577f40d8c151a00706a",
+      "snapshotId": "sha256:fefa7e1962b9a46955bb354bfa6f2d6989de7f4f4b51e05bbf697ec3de06475c",
       "files": {
         "THIRD_PARTY_NOTICES.txt": "sha256:c729a77bf07eb9745b2d89c3ce4ead3357438366f41743d2755ae35f98509cf9",
         "index.apple-touch-icon.png": "sha256:c885478ff1b2d95ee194848c51c701a0dbec00e1bb8b12c914e0a4b0141e7d47",
@@ -1354,12 +1354,12 @@
         "index.html": "sha256:185e294983d57a4872ad94710763b0a8b8b23eff889ca4a5f4a03f81cf66cdd9",
         "index.icon.png": "sha256:29c48f1d2e175d03216de9841fc59e2421df3741418688e0c8fb482635cc64ab",
         "index.js": "sha256:cb28c2d8ffd8981888823f1b6d98cdec4e3e11adf209ad556c22878e6d51c63a",
-        "index.pck": "sha256:209412e7371a3b51d106496ac4abaedd277b257b8dc91ef94e422196a1b8be4a",
+        "index.pck": "sha256:8534dee0348905117ef6ae56617e60498afbb71ca8cb2fb827ae4b92623a6bfb",
         "index.png": "sha256:3cb4495c0b98dfbe4b663cbf2b6836473572339beb66d902367893162a70be0e",
         "index.wasm": "sha256:fc74679e3b97f76878947fcd4fbe1268cbfa6188182a2e33bbc3f5dc9bfa57d0",
         "open-source-licenses.html": "sha256:9215f5fdd50039a9b6f3d8f0271cbc21bbdf64b917fb118dd29c8a16b9974e00"
       },
-      "digest": "sha256:71af9f9a2ed78ac79739cdbee09a222c6416f1e6dca53ed56191bdb85ed68072"
+      "digest": "sha256:27fb37a57172e94bc2625ca05549aa827787a068940c66fe5cc739d49fe57f23"
     }
   },
   "artifacts": {
@@ -1368,8 +1368,8 @@
       "sha256": "sha256:fc74679e3b97f76878947fcd4fbe1268cbfa6188182a2e33bbc3f5dc9bfa57d0"
     },
     "pck": {
-      "path": "/manus-storage/game/sha256/209412e7371a3b51d106496ac4abaedd277b257b8dc91ef94e422196a1b8be4a.pck",
-      "sha256": "sha256:209412e7371a3b51d106496ac4abaedd277b257b8dc91ef94e422196a1b8be4a"
+      "path": "/manus-storage/game/sha256/8534dee0348905117ef6ae56617e60498afbb71ca8cb2fb827ae4b92623a6bfb.pck",
+      "sha256": "sha256:8534dee0348905117ef6ae56617e60498afbb71ca8cb2fb827ae4b92623a6bfb"
     }
   },
   "files": {
@@ -1378,7 +1378,7 @@
     "index.apple-touch-icon.png": "sha256:c885478ff1b2d95ee194848c51c701a0dbec00e1bb8b12c914e0a4b0141e7d47",
     "index.audio.position.worklet.js": "sha256:be33985bc7160d6bf9646f259cd86b259cd67b02ccb297ee5c44f8ac84327bc8",
     "index.audio.worklet.js": "sha256:5b476a9c9ce642c0ee4256436d1bc31d9c38f868aca0f9a8e2a57c18d2dec2a3",
-    "index.html": "sha256:c440b40d4b510cf6e973c84a51ecda0375cce06b119b456cab2c1fc47683a100",
+    "index.html": "sha256:863baf023467e1b38038e4c8861bd572a283e6f6bb7bdd53a6732ae2a1c97f10",
     "index.icon.png": "sha256:29c48f1d2e175d03216de9841fc59e2421df3741418688e0c8fb482635cc64ab",
     "index.js": "sha256:cb28c2d8ffd8981888823f1b6d98cdec4e3e11adf209ad556c22878e6d51c63a",
     "index.png": "sha256:3cb4495c0b98dfbe4b663cbf2b6836473572339beb66d902367893162a70be0e",

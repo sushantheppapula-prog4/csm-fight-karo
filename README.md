@@ -4,7 +4,7 @@
 
 ## Play
 
-Choose **Play Now**, select a mode, then pick your fighter. Player 1 can choose only from the CSM Gang roster; Player 2 or the CPU can choose only from the Opposite Gang roster. The game offers same-keyboard local 1v1, solo versus AI (Easy, Normal or Hard), and Practice against a stationary opponent. Matches are best of three rounds with a 60-second timer per round. Win two rounds to take the match; pause, restart or rematch from the game flow.
+Choose **Play Now**, select a mode, then pick your fighter. Player 1 can choose only from the CSM Gang roster; Player 2 or the CPU can choose only from the Opposite Gang roster. Play same-keyboard local 1v1, solo versus AI (Easy, Normal or Hard), or Practice against a stationary opponent. Matches are best of three rounds with a 60-second timer per round. Win two rounds to take the match; pause, restart or rematch from the game flow.
 
 ### Keyboard controls
 
@@ -17,7 +17,7 @@ Choose **Play Now**, select a mode, then pick your fighter. Player 1 can choose 
 | Block | S | Down |
 | Signature special | H | Semicolon (`;`) |
 
-Special attacks require a full energy meter. Successful attacks build energy. On touch devices, use the on-screen movement, jump, punch, kick, block and special buttons.
+Special attacks require a full energy meter; successful attacks build energy. On touch devices, use the on-screen movement, jump, punch, kick, block and special buttons.
 
 ### Fighters
 
@@ -31,4 +31,6 @@ This is a browser-only, local game. It has no account, backend, database, Supaba
 
 ## Run and export
 
-Open `project.godot` in Godot **4.7.2** and run the main scene. The configured **Web** export preset uses `web/loading.html` and targets a browser build. No server or database configuration is needed for gameplay.
+Open `project.godot` in Godot **4.7.2** and run the main scene in the configured project environment. The **Web** export preset uses `web/loading.html` and targets browsers. No gameplay server or database is required.
+
+Art and audio binaries are managed through `assets.lock.json` and the project's asset store rather than duplicated in Git. A standalone Godot clone needs those assets hydrated or replaced before a new source export; the prepared browser release is provided through the project's preview/release pipeline.
